@@ -1,0 +1,2588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRUM Session Sampling One-Stop Guide | Redis + Jedis + Lua</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f7fb;
+  --paper: #ffffff;
+  --paper-soft: #f9fbff;
+  --ink: #172033;
+  --muted: #5d6b82;
+  --subtle: #8591a6;
+  --line: #dfe5ef;
+  --blue: #2558d6;
+  --blue-2: #e7efff;
+  --teal: #007f7a;
+  --green: #16794c;
+  --amber: #a15c00;
+  --red: #bd3426;
+  --violet: #6251c7;
+  --shadow: 0 18px 55px rgba(23, 32, 51, .12);
+  --radius: 8px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(37, 88, 214, .08), transparent 34rem),
+    linear-gradient(180deg, #fbfcff 0%, var(--bg) 42rem);
+  color: var(--ink);
+  font: 14px/1.72 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.topbar {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 22px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  color: #fff;
+  background: linear-gradient(90deg, #173f9f, #2558d6 55%, #007f7a);
+  box-shadow: 0 2px 10px rgba(12, 25, 55, .2);
+}
+.logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #173f9f;
+  background: #fff;
+}
+.topbar strong { font-size: 15px; }
+.topbar span { opacity: .82; font-size: 12px; }
+main {
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  padding: 34px 44px 80px;
+}
+.hero {
+  min-height: 500px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(340px, .92fr);
+  gap: 32px;
+  align-items: center;
+  padding: 36px 0 44px;
+}
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.pulse {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 0 rgba(22, 121, 76, .5);
+  animation: pulse 2.2s infinite;
+}
+.hero h1 {
+  margin: 18px 0 14px;
+  color: #101829;
+  font-size: clamp(38px, 6vw, 76px);
+  line-height: .98;
+  letter-spacing: 0;
+}
+.hero p {
+  max-width: 760px;
+  color: var(--muted);
+  font-size: 17px;
+}
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 700;
+}
+.btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+.hero-panel {
+  position: relative;
+  min-height: 390px;
+  padding: 20px;
+  border: 1px solid rgba(37, 88, 214, .18);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.82);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.hero-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(140deg, rgba(37,88,214,.11), transparent 40%, rgba(0,127,122,.13));
+  pointer-events: none;
+}
+.mini-flow { position: relative; display: grid; gap: 12px; z-index: 1; }
+.mini-step {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(255,255,255,.92);
+  transform: translateY(8px);
+  opacity: 0;
+  animation: rise .55s ease forwards;
+}
+.mini-step:nth-child(2) { animation-delay: .12s; }
+.mini-step:nth-child(3) { animation-delay: .24s; }
+.mini-step:nth-child(4) { animation-delay: .36s; }
+.mini-step:nth-child(5) { animation-delay: .48s; }
+.mini-step:nth-child(6) { animation-delay: .60s; }
+.mini-step b {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  color: #fff;
+  background: var(--blue);
+}
+.mini-step span { display: block; color: var(--muted); font-size: 12px; line-height: 1.35; }
+.stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0 34px;
+}
+.stat {
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+.stat strong { display: block; font-size: 24px; line-height: 1; }
+.stat span { color: var(--muted); font-size: 12px; }
+.section-index {
+  display: grid;
+  grid-template-columns: minmax(220px, .42fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  margin: 8px 0 34px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 10px 30px rgba(23,32,51,.06);
+}
+.section-index h2 {
+  margin: 4px 0 6px;
+  color: #101829;
+  font-size: 22px;
+  line-height: 1.2;
+}
+.section-index p { margin: 0; color: var(--muted); }
+.index-kicker {
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.index-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.index-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.index-links a:hover { color: var(--blue); border-color: rgba(37,88,214,.25); background: var(--blue-2); text-decoration: none; }
+section, article.md-content { margin: 28px 0; }
+.section-card {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: 0 10px 30px rgba(23,32,51,.05);
+}
+.section-title {
+  margin: 0 0 10px;
+  color: #101829;
+  font-size: 26px;
+  line-height: 1.2;
+}
+.lead { color: var(--muted); font-size: 15px; max-width: 880px; }
+.diagram-grid { display: grid; gap: 18px; }
+.diagram {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: auto;
+}
+.diagram h3 { margin: 0 0 14px; font-size: 17px; }
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(150px, 1fr));
+  gap: 14px;
+  align-items: stretch;
+  min-width: 1040px;
+}
+.pipe-card {
+  position: relative;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #fff, #f7faff);
+}
+.pipe-card::after {
+  content: "";
+  position: absolute;
+  right: -15px;
+  top: 50%;
+  width: 15px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--blue), transparent);
+}
+.pipe-card:last-child::after { display: none; }
+.pipe-card b { display: block; margin-bottom: 8px; color: var(--blue); }
+.pipe-card span { display: block; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.engine-flow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  min-width: 900px;
+  align-items: start;
+}
+.lane { display: grid; gap: 10px; }
+.node {
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  text-align: center;
+  background: #fff;
+  color: var(--ink);
+  font-size: 12px;
+  box-shadow: 0 6px 18px rgba(23,32,51,.05);
+}
+.node.blue { background: #e6f6ff; border-color: #9fd4f3; }
+.node.amber { background: #fff0c2; border-color: #f4c453; }
+.node.green { background: #dff7eb; border-color: #84d2a7; }
+.node.violet { background: #ecebff; border-color: #b6b2f0; }
+.node.red { background: #ffe7e3; border-color: #f2a59a; }
+.diamond { transform: rotate(45deg); width: 92px; height: 92px; margin: 6px auto; }
+.diamond span { transform: rotate(-45deg); display: block; font-size: 11px; line-height: 1.25; }
+.connector { width: 2px; height: 22px; margin: 0 auto; background: linear-gradient(var(--blue), transparent); animation: flowline 1.8s infinite; }
+.redis-grid { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 12px; min-width: 900px; }
+.scenario-grid { display: grid; grid-template-columns: repeat(5, minmax(170px, 1fr)); gap: 12px; min-width: 960px; }
+.scenario-card, .redis-card {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+.scenario-card b, .redis-card b { display: block; color: var(--blue); margin-bottom: 6px; }
+.scenario-card span, .redis-card span { display: block; color: var(--muted); font-size: 12px; }
+.md-content {
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+.md-content h1, .md-content h2, .md-content h3, .md-content h4 { line-height: 1.28; letter-spacing: 0; }
+.md-content h1 { margin: 38px 0 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); font-size: 26px; }
+.md-content h2 { margin: 30px 0 10px; font-size: 21px; }
+.md-content h3 { margin: 22px 0 8px; font-size: 17px; }
+.md-content h4 { margin: 18px 0 6px; font-size: 15px; }
+.md-content h1:first-child { margin-top: 0; }
+.anchor { float: left; margin-left: -18px; opacity: 0; color: var(--subtle); }
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor { opacity: 1; }
+p { margin: 0 0 12px; }
+blockquote {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--blue);
+  border-radius: 0 7px 7px 0;
+  background: var(--blue-2);
+  color: #273a67;
+}
+code {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #f3f5f9;
+  color: #a33220;
+  font: 12px/1.5 "SFMono-Regular", Consolas, Menlo, monospace;
+}
+pre { overflow: auto; padding: 14px; border-radius: 8px; background: #101827; color: #eaf0ff; }
+pre code { padding: 0; border: 0; background: transparent; color: inherit; }
+.table-wrap { width: 100%; overflow: auto; margin: 16px 0; border: 1px solid var(--line); border-radius: var(--radius); }
+table { width: 100%; border-collapse: collapse; min-width: 680px; }
+th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+th { background: #f1f5ff; color: #24375f; font-size: 12px; }
+tr:last-child td { border-bottom: 0; }
+.missing-asset { margin: 18px 0; padding: 16px; border: 1px dashed var(--line); border-radius: 8px; background: var(--paper-soft); }
+.asset-placeholder { color: var(--muted); }
+.source-appendix pre { max-height: 620px; white-space: pre-wrap; }
+.backtop {
+  position: fixed;
+  right: 20px;
+  bottom: 18px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+@keyframes pulse { 70% { box-shadow: 0 0 0 12px rgba(22, 121, 76, 0); } 100% { box-shadow: 0 0 0 0 rgba(22, 121, 76, 0); } }
+@keyframes rise { to { transform: translateY(0); opacity: 1; } }
+@keyframes flowline { 0% { opacity: .25; transform: scaleY(.4); transform-origin: top; } 45% { opacity: 1; transform: scaleY(1); } 100% { opacity: .25; transform: scaleY(.4); transform-origin: bottom; } }
+@media (max-width: 980px) {
+  main { padding: 24px 18px 70px; }
+  .hero { grid-template-columns: 1fr; min-height: auto; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .section-index { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .topbar { height: auto; min-height: 52px; align-items: flex-start; flex-direction: column; padding: 12px 16px; }
+  main { padding: 18px 14px 64px; }
+  .stats { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 36px; }
+  .md-content { padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body id="top">
+<header class="topbar">
+  <div class="logo">E</div>
+  <strong>BRUM Session Sampling</strong>
+  <span>Redis · Jedis · Lua · Collector Hot Path</span>
+</header>
+<main>
+  <section class="hero">
+    <div>
+      <div class="eyebrow"><span class="pulse"></span> End-to-End Technical Reference</div>
+      <h1>BRUM Session Sampling</h1>
+      <p>Distributed session-based sampling for Browser Real User Monitoring, designed to reduce EUM license consumption while preserving full session integrity across stateless collector pods.</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#architecture-overview">View Architecture</a>
+        <a class="btn" href="#full-technical-reference">Read Full Reference</a>
+        <a class="btn" href="#verbatim-source">Verify Source Coverage</a>
+      </div>
+    </div>
+    <div class="hero-panel">
+      <div class="mini-flow">
+        <div class="mini-step"><b>1</b><div><strong>Browser beacon arrives</strong><span>JS agent posts page, AJAX, JS error, and resource timing data.</span></div></div>
+        <div class="mini-step"><b>2</b><div><strong>Collector parses record</strong><span>BeaconProcessor turns payload into BrowserRecord on JVM heap.</span></div></div>
+        <div class="mini-step"><b>3</b><div><strong>Jedis calls Redis</strong><span>Collector sends KEYS and ARGV to preloaded Lua script.</span></div></div>
+        <div class="mini-step"><b>4</b><div><strong>Lua decides atomically</strong><span>Existing sessions reuse the same samplingStatus; new sessions self-correct toward target.</span></div></div>
+        <div class="mini-step"><b>5</b><div><strong>Accept or drop early</strong><span>Accepted records continue to Kinesis; rejected records are discarded before downstream cost.</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><strong>~60%</strong><span>License consumption reduction</span></div>
+    <div class="stat"><strong>1</strong><span>Redis round trip per decision</span></div>
+    <div class="stat"><strong>&lt;5ms</strong><span>Target sampling latency</span></div>
+    <div class="stat"><strong>4</strong><span>Redis key types per app</span></div>
+    <div class="stat"><strong>5</strong><span>Sampling scenarios</span></div>
+    <div class="stat"><strong>630s</strong><span>Example TTL with 30s timeout</span></div>
+  </section>
+
+  <section class="section-index">
+    <div>
+      <div class="index-kicker">Page Map</div>
+      <h2>Everything from the Markdown, with DCA-style navigation</h2>
+      <p>The rendered reference keeps the Markdown order and adds native diagrams for the architecture, Redis model, Lua decision path, and sampling scenarios.</p>
+    </div>
+    <nav class="index-links" aria-label="Section links">
+      <a href="#architecture-overview">Visual Architecture</a>
+      <a href="#redis-decision">Redis Decision</a>
+      <a href="#data-model">Data Model</a>
+      <a href="#scenario-map">Scenarios</a>
+      <a href="#table-of-contents">Table of Contents</a>
+<a href="#1-what-is-eum--big-picture-first">What is EUM? — Big Picture First</a>
+<a href="#2-eum-cloud-architecture--component-walkthrough">EUM Cloud Architecture — Component Walkthrough</a>
+<a href="#a-browser-beacon-is-an-http-post-with-a-binary-or-json-payload-here-is-its-lifecycle">A browser beacon is an HTTP POST with a binary or JSON payload. Here is its lifecycle:</a>
+<a href="#a-browserrecord-is-a-java-object-on-the-heap-here-is-what-it-looks-like-structurally">A BrowserRecord is a Java object on the heap. Here is what it looks like structurally:</a>
+<a href="#3-the-full-theoretical-path-revised">The Full Theoretical Path (Revised)</a>
+<a href="#phase-a-deployment--delivery">Phase A: Deployment &amp; Delivery</a>
+<a href="#phase-b-collection--egress">Phase B: Collection &amp; Egress</a>
+<a href="#phase-c-ingress--processing">Phase C: Ingress &amp; Processing</a>
+<a href="#why-this-matters-for-the-platform">Why this matters for the Platform</a>
+<a href="#1-the-entry-point-aws-application-load-balancers-alb">The Entry Point: AWS Application Load Balancers (ALB)</a>
+<a href="#2-the-intelligence-layer-envoy-proxy-tiers">The Intelligence Layer: Envoy Proxy Tiers</a>
+<a href="#3-why-have-both-the-theory-of-proxy-in-proxy">Why Have Both? (The Theory of &quot;Proxy-in-Proxy&quot;)</a>
+<a href="#3-the-problem-this-project-solved">The Problem This Project Solved</a>
+<a href="#4-elevator-pitch">Elevator Pitch</a>
+<a href="#5-your-exact-contribution">Your Exact Contribution</a>
+<a href="#6-architecture-and-flow">Architecture and Flow</a>
+<a href="#7-redis-data-model--complete-reference">Redis Data Model — Complete Reference</a>
+<a href="#8-session-object-schema--full-specification">Session Object Schema — Full Specification</a>
+<a href="#9-lua-script--atomic-session-decision">Lua Script — Atomic Session Decision</a>
+<a href="#10-sampling-algorithm--5-scenarios">Sampling Algorithm — 5 Scenarios</a>
+<a href="#11-where-this-fits-in-collector-flow">Where This Fits in Collector Flow</a>
+<a href="#12-design-decisions-and-tradeoffs">Design Decisions and Tradeoffs</a>
+<a href="#13-impact-and-metrics">Impact and Metrics</a>
+<a href="#14-core-components-reference">Core Components Reference</a>
+<a href="#15-configuration-properties">Configuration Properties</a>
+<a href="#16-interview-q-and-a">Interview Q and A</a>
+<a href="#17-one-liners-and-soundbites">One-Liners and Soundbites</a>
+<a href="#18-tech-stack">Tech Stack</a>
+<a href="#19-final-prep-checklist">Final Prep Checklist</a>
+      <a href="#verbatim-source">Full Markdown Source</a>
+    </nav>
+  </section>
+
+  <section id="architecture-overview" class="section-card">
+    <h2 class="section-title">Visual Architecture</h2>
+    <p class="lead">The Markdown references an external EUM HLD SVG that is not present in the folder, so this guide recreates the relevant flow directly in HTML.</p>
+    <div class="diagram">
+      <h3>EUM ingestion path and sampling gate</h3>
+      <div class="pipeline">
+        <div class="pipe-card"><b>CDN</b><span>Delivers Browser JS agent globally through edge locations.</span></div>
+        <div class="pipe-card"><b>Browser Agent</b><span>Collects page load, AJAX, JS errors, and resource timings.</span></div>
+        <div class="pipe-card"><b>ALB + Envoy</b><span>Terminates HTTPS, routes BRUM traffic, applies resilience controls.</span></div>
+        <div class="pipe-card"><b>EUM Collector</b><span>Parses beacons into BrowserRecord and reaches sampling gate early.</span></div>
+        <div class="pipe-card"><b>Redis Lua Gate</b><span>Atomically decides accept/drop and preserves session coherence.</span></div>
+        <div class="pipe-card"><b>Downstream</b><span>Kinesis, Sessionizer, Decorator, metrics, stores, and serving APIs.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="redis-decision" class="section-card">
+    <h2 class="section-title">Atomic Redis Lua Decision</h2>
+    <p class="lead">The project’s core correctness property is that all collectors coordinate through a single Redis-side Lua script, avoiding duplicate session creation and per-pod inconsistent decisions.</p>
+    <div class="diagram">
+      <h3>Decision engine view</h3>
+      <div class="engine-flow">
+        <div class="lane">
+          <div class="node blue">Collector pod receives BrowserRecord</div>
+          <div class="connector"></div>
+          <div class="node blue">Build KEYS: session, total, accepted, target</div>
+          <div class="connector"></div>
+          <div class="node blue">Build ARGV: JSON, start, end, timeout, targetPct</div>
+        </div>
+        <div class="lane">
+          <div class="node violet">Jedis EVALSHA</div>
+          <div class="connector"></div>
+          <div class="node amber diamond"><span>Session exists?</span></div>
+          <div class="connector"></div>
+          <div class="node amber diamond"><span>Time overlap?</span></div>
+        </div>
+        <div class="lane">
+          <div class="node green">Existing: extend boundaries and return immutable samplingStatus</div>
+          <div class="connector"></div>
+          <div class="node green">New: compare accepted / total with target percentage</div>
+          <div class="connector"></div>
+          <div class="node red">Return true to process, false to drop before downstream cost</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="data-model" class="section-card">
+    <h2 class="section-title">Redis Data Model</h2>
+    <div class="diagram">
+      <h3>Four key types per appKey</h3>
+      <div class="redis-grid">
+        <div class="redis-card"><b>sampled_session:{appKey}:{sessionId}</b><span>JSON object with startTimeMs, endTimeMs, and immutable samplingStatus. TTL-based cleanup.</span></div>
+        <div class="redis-card"><b>total_sessions_count:{appKey}</b><span>Persistent integer counter incremented for every new session.</span></div>
+        <div class="redis-card"><b>accepted_sessions_count:{appKey}</b><span>Persistent integer counter incremented only when a new session is accepted.</span></div>
+        <div class="redis-card"><b>sampling_percentage:{appKey}</b><span>Persistent app-scoped target percentage, initialized on cold start.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="scenario-map" class="section-card">
+    <h2 class="section-title">Sampling Scenario Map</h2>
+    <div class="diagram">
+      <h3>Five scenarios covered in the algorithm</h3>
+      <div class="scenario-grid">
+        <div class="scenario-card"><b>1. Cold start</b><span>First session for app initializes counters and is always accepted.</span></div>
+        <div class="scenario-card"><b>2. Under target</b><span>Current accepted ratio is low, so the next new session is accepted.</span></div>
+        <div class="scenario-card"><b>3. Over target</b><span>Current accepted ratio is high, so the next new session is rejected.</span></div>
+        <div class="scenario-card"><b>4. At target</b><span>Randomized choice avoids deterministic bias around the target percentage.</span></div>
+        <div class="scenario-card"><b>5. Existing session</b><span>Boundary update preserves original session sampling decision.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <article id="full-technical-reference" class="md-content">
+    <h1 id="brum-session-sampling--redis--jedis--lua"><a class="anchor" href="#brum-session-sampling--redis--jedis--lua">#</a>BRUM Session Sampling — Redis + Jedis + Lua</h1>
+<h3 id="end-to-end-technical-reference-for-interview-preparation"><a class="anchor" href="#end-to-end-technical-reference-for-interview-preparation">#</a>End-to-End Technical Reference for Interview Preparation</h3>
+<blockquote><p><strong>Role:</strong> Software Engineer II — EUM Collector Platform  </p><p><strong>Scope:</strong> Distributed session-based sampling for Browser Real User Monitoring (BRUM)  </p><p><strong>Stack:</strong> Java · Redis · Jedis · Lua · Kinesis · SQS · Spring Boot  </p><p><strong>Impact:</strong> ~60% reduction in EUM license consumption without breaking session integrity</p></blockquote>
+<hr>
+<h2 id="table-of-contents"><a class="anchor" href="#table-of-contents">#</a>Table of Contents</h2>
+<ol><li><a href="#1-what-is-eum--big-picture-first">What is EUM? — Big Picture First</a></li><li><a href="#2-eum-cloud-architecture--component-walkthrough">EUM Cloud Architecture — Component Walkthrough</a></li><li><a href="#3-the-problem-this-project-solved">The Problem This Project Solved</a></li><li><a href="#4-elevator-pitch">Elevator Pitch</a></li><li><a href="#5-your-exact-contribution">Your Exact Contribution</a></li><li><a href="#6-architecture-and-flow">Architecture and Flow</a></li><li><a href="#7-redis-data-model--complete-reference">Redis Data Model — Complete Reference</a></li><li><a href="#8-session-object-schema--full-specification">Session Object Schema — Full Specification</a></li><li><a href="#9-lua-script--atomic-session-decision">Lua Script — Atomic Session Decision</a></li><li><a href="#10-sampling-algorithm--5-scenarios">Sampling Algorithm — 5 Scenarios</a></li><li><a href="#11-where-this-fits-in-collector-flow">Where This Fits in Collector Flow</a></li><li><a href="#12-design-decisions-and-tradeoffs">Design Decisions and Tradeoffs</a></li><li><a href="#13-impact-and-metrics">Impact and Metrics</a></li><li><a href="#14-core-components-reference">Core Components Reference</a></li><li><a href="#15-configuration-properties">Configuration Properties</a></li><li><a href="#16-interview-q-and-a">Interview Q and A</a></li><li><a href="#17-one-liners-and-soundbites">One-Liners and Soundbites</a></li><li><a href="#18-tech-stack">Tech Stack</a></li><li><a href="#19-final-prep-checklist">Final Prep Checklist</a></li></ol>
+<hr>
+<h2 id="1-what-is-eum--big-picture-first"><a class="anchor" href="#1-what-is-eum--big-picture-first">#</a>1. What is EUM? — Big Picture First</h2>
+<p><strong>EUM = End User Monitoring.</strong> It is the observability platform that captures and analyzes real user interactions with web and mobile applications.</p>
+<p>EUM covers three major product areas:</p>
+<div class="table-wrap"><table><thead><tr><th>Product</th><th>Acronym</th><th>What it monitors</th></tr></thead><tbody><tr><td>Browser Real User Monitoring</td><td>BRUM</td><td>Web browser sessions, page views, AJAX calls, JS errors, resource timings</td></tr><tr><td>Mobile Real User Monitoring</td><td>MRUM</td><td>iOS and Android app sessions, crashes, network calls</td></tr><tr><td>Synthetic Monitoring</td><td>SRUM</td><td>Scripted test agents that simulate user paths</td></tr></tbody></table></div>
+<p>The EUM Cloud is the centralized processing system that ingests, processes, stores, and exposes all of this data. It is the system you need to explain before walking into your project contribution.</p>
+<hr>
+<h2 id="2-eum-cloud-architecture--component-walkthrough"><a class="anchor" href="#2-eum-cloud-architecture--component-walkthrough">#</a>2. EUM Cloud Architecture — Component Walkthrough</h2>
+<p><figure class="missing-asset"><div class="asset-placeholder">Referenced asset: <code>eum_cloud_hld_interactive.svg</code></div><figcaption>EUM Cloud HLD Diagram</figcaption></figure></p>
+<h3 id="21-how-eum-ingestion-works--layer-by-layer"><a class="anchor" href="#21-how-eum-ingestion-works--layer-by-layer">#</a>2.1 How EUM Ingestion Works — Layer by Layer</h3>
+<p>When you open this conversation with an interviewer, walk them through the following layers top to bottom. This establishes the full context before you zoom into your project.</p>
+<pre><code class="language-">Agents/Users
+    Browser Agents (JS agent)
+    Mobile Agents (iOS/Android SDK)
+    IoT Agents
+    Synth Agents / Schedulers
+    ThousandEye Server
+        |
+        v
+AWS Load Balancers / ALBs
+    Collector-proxy ALB      &lt;-- BRUM, IoT, Synth agent traffic
+    EUM-proxy ALB            &lt;-- BRUM + MRUM traffic
+    TE-Collector ALB         &lt;-- ThousandEye traffic
+        |
+        v
+Envoy Proxy Tiers
+    collector-proxy          &lt;-- routes to Collector pods
+    eum-proxy                &lt;-- routes to Collector pods
+    col-proxy-ctrl           &lt;-- control plane config
+        |
+        v
+EUM Cloud (EUM Collector Pods)
+    Collector    &lt;-- BRUM beacon ingestion
+    IoT Collector
+    Synth Collector
+        |
+        v
+Metrics Pipeline
+    L1 Metrics Store (primary)
+    L2 Metrics Store (aggregated)
+    Secondary Store
+        |
+        v
+Parallel Processing Pipelines
+    Event Pipeline:     Event Symbolicator -&gt; Event Grouper -&gt; Event Group Store
+    Crash Pipeline:     Crash Symbolicator -&gt; Crash Grouper -&gt; Crash Group Store
+    Session Pipeline:   Sessionizer -&gt; Decorator -&gt; EuM Custom View Store
+    JS Error Pipeline:  JS Error Grouper -&gt; JS Error Stacktrace Store
+        |
+        v
+Serving Layer
+    xlb (load balancer)
+    API Server
+    Screenshot Service
+    User Journey Query Service
+    BRUM Error Service
+        |
+        v
+License Portal / Controller (EuM Custom Label Store, S3 snapshots)
+</code></pre>
+<h3 id="2-beacon-data--where-does-it-go"><a class="anchor" href="#2-beacon-data--where-does-it-go">#</a>2. Beacon Data — Where Does It Go?</h3>
+<h2 id="a-browser-beacon-is-an-http-post-with-a-binary-or-json-payload-here-is-its-lifecycle"><a class="anchor" href="#a-browser-beacon-is-an-http-post-with-a-binary-or-json-payload-here-is-its-lifecycle">#</a>A browser beacon is an HTTP POST with a binary or JSON payload. Here is its lifecycle:</h2>
+<pre><code class="language-">Step 1: Browser JS agent sends HTTP POST beacon
+        Payload example:
+        {
+          &quot;sessionId&quot;:   &quot;sess_abc123&quot;,
+          &quot;appKey&quot;:      &quot;EX-AAA-AUM&quot;,
+          &quot;startTime&quot;:   1698765432100,
+          &quot;endTime&quot;:     1698765445200,
+          &quot;pageUrl&quot;:     &quot;https://example.com/checkout&quot;,
+          &quot;ajaxCalls&quot;:   [...],
+          &quot;jsErrors&quot;:    [...],
+          &quot;resourceTimings&quot;: [...]
+        }
+
+Step 2: HTTP Servlet in Collector receives it
+        → Calls BeaconProcessor.processBeacon(rawBytes)
+
+Step 3: BeaconProcessor parses raw bytes → BrowserRecord Java object
+        BrowserRecord {
+          sessionId:   &quot;sess_abc123&quot;
+          appKey:      &quot;EX-AAA-AUM&quot;
+          startTimeMs: 1698765432100
+          endTimeMs:   1698765445200
+          ...other fields
+        }
+        ↑ This object lives on JVM heap. It is NOT written to disk or DB.
+
+Step 4: BrumSampler.sampleBrowserRecord(record) is called
+        → Reads/writes ONLY to Redis (my project)
+        → Returns true (accept) or false (drop)
+
+Step 5a: If ACCEPTED → push BrowserRecord to Kinesis stream
+         → downstream Sessionizer picks it up
+         → eventually lands in EuM Custom View Store
+
+Step 5b: If REJECTED → record is discarded from memory
+         → reportUnsampledBeaconCount() called
+         → nothing written anywhere (beacon is dropped)
+Beacon data itself is never persisted by Collector. It is either forwarded downstream or dropped.</code></pre>
+<h3 id="3-record-data--where-does-it-live"><a class="anchor" href="#3-record-data--where-does-it-live">#</a>3. Record Data — Where Does It Live?</h3>
+<h2 id="a-browserrecord-is-a-java-object-on-the-heap-here-is-what-it-looks-like-structurally"><a class="anchor" href="#a-browserrecord-is-a-java-object-on-the-heap-here-is-what-it-looks-like-structurally">#</a>A BrowserRecord is a Java object on the heap. Here is what it looks like structurally:</h2>
+<pre><code class="language-">// Conceptual structure of BrowserRecord
+class BrowserRecord {
+    String  sessionId;          // &quot;sess_abc123&quot;
+    String  appKey;             // &quot;EX-AAA-AUM&quot;
+    long    startTimeMs;        // 1698765432100
+    long    endTimeMs;          // 1698765445200
+    String  pageUrl;
+    String  agentId;
+    List&lt;AjaxRecord&gt;   ajaxCalls;
+    List&lt;ErrorRecord&gt;  jsErrors;
+    // ... other EUM-specific fields
+}</code></pre>
+<p>It is NOT written to a database by the collector. The Collector's job is:</p>
+<p>Parse the beacon into a record Validate it Make the sampling decision Either forward it downstream (Kinesis) or drop it The persistence responsibility belongs to the Sessionizer and downstream stores.</p>
+<p>To provide a complete picture of the ingestion flow, we need to look at the Edge-of-the-Edge: the Content Delivery Network (CDN).</p>
+<p>In the EUM Cloud architecture, the flow doesn't start at the ALB; it starts with the global distribution of the monitoring code itself.</p>
+<h3 id="1-the-global-distribution-js-agents-on-the-cdn"><a class="anchor" href="#1-the-global-distribution-js-agents-on-the-cdn">#</a>1. The Global Distribution: JS Agents on the CDN</h3>
+<p>Before a single metric is captured, the Browser Agent (JS agent) must be loaded into the user's browser.</p>
+<p>Regional Deployment: The JS agent is hosted on CDNs (like CloudFront or Akamai) across multiple global regions. This ensures that when a user in London or Tokyo opens a monitored website, the agent script is fetched from a nearby &quot;Edge Location&quot; rather than a central server, minimizing page load impact.</p>
+<p>Version Management: CDNs allow for &quot;staged rollouts&quot; of agent updates. Different regions can host different versions of the agent, allowing for canary testing of new collection features.</p>
+<h3 id="2-data-collection-the-beacon-api"><a class="anchor" href="#2-data-collection-the-beacon-api">#</a>2. Data Collection: The Beacon API</h3>
+<p>Once the agent is running in the user's browser, it hooks into the Beacon API and other browser performance interfaces.</p>
+<p>The &quot;Collection&quot; Phase: The agent gathers page load timings, AJAX calls, and JS errors. It packages this into a binary or JSON payload known as a &quot;Beacon.&quot;</p>
+<p>The Transmission Phase: Instead of sending data back to the CDN (which is primarily for delivering content), the agent sends an HTTP POST request directly to the EUM Cloud Ingress.</p>
+<h2 id="3-the-full-theoretical-path-revised"><a class="anchor" href="#3-the-full-theoretical-path-revised">#</a>3. The Full Theoretical Path (Revised)</h2>
+<p>Integrating your points, the end-to-end flow looks like this:</p>
+<h2 id="phase-a-deployment--delivery"><a class="anchor" href="#phase-a-deployment--delivery">#</a>Phase A: Deployment &amp; Delivery</h2>
+<p>CDN Tier: Hosts the JS agent scripts globally.</p>
+<p>User Browser: Downloads the agent from the nearest CDN edge.</p>
+<h2 id="phase-b-collection--egress"><a class="anchor" href="#phase-b-collection--egress">#</a>Phase B: Collection &amp; Egress</h2>
+<p>JS Agent: Executes in the browser, collecting performance data.</p>
+<p>Beacon POST: The agent &quot;phones home&quot; by sending the collected data to the EUM Cloud.</p>
+<h2 id="phase-c-ingress--processing"><a class="anchor" href="#phase-c-ingress--processing">#</a>Phase C: Ingress &amp; Processing</h2>
+<p>AWS ALB: Receives the beacon. It performs regional load balancing and SSL termination.</p>
+<ul><li>Envoy Proxy: Performs intelligent routing, header-based segregation, and circuit breaking.</li></ul>
+<ul><li>EUM Collector: Receives the beacon, where your distributed session sampling logic decides whether to keep or drop the data based on the app's license configuration.</li></ul>
+<h2 id="why-this-matters-for-the-platform"><a class="anchor" href="#why-this-matters-for-the-platform">#</a>Why this matters for the Platform</h2>
+<p>By separating the Agent Delivery (CDN) from the Data Ingestion (ALB/Envoy), the system achieves massive scale:</p>
+<p>The CDN handles the high-bandwidth task of serving static JS files.</p>
+<p>The EUM Cloud focuses purely on the high-throughput, compute-heavy task of processing millions of incoming data points.</p>
+<p>This specific layer of the <a href="https://github.com/abhishekgoyal17/Level_up/blob/main/01_EUM_session_sampling.md">EUM Cloud architecture</a> represents the <strong>Edge Ingress and Routing Tier</strong>. It is designed to handle massive, heterogeneous traffic from millions of global agents while ensuring high availability and intelligent routing.</p>
+<p>The transition from <strong>AWS ALBs</strong> to <strong>Envoy Proxy Tiers</strong> is a classic &quot;Two-Tiered Ingress&quot; strategy. Here is the theoretical breakdown of how these components work together:</p>
+<hr>
+<h3 id="data-flow"><a class="anchor" href="#data-flow">#</a>Data Flow:</h3>
+<pre><code class="language-text">+---------------+------------------+-----------------------------------------------------------------------------+
+| Stage         | Component        | Action                                                                      |
++---------------+------------------+-----------------------------------------------------------------------------+
+| Delivery      | CDN              | Browser downloads the JS agent (e.g., from cdn.appdynamics.com).            |
++---------------+------------------+-----------------------------------------------------------------------------+
+| Collection    | JS Agent         | Agent gathers page load, AJAX, and JS error data from the browser.          |
++---------------+------------------+-----------------------------------------------------------------------------+
+| Ingestion     | EUM Collector    | Data is sent to a regional AWS-hosted collector (e.g., fra-col.example.com).|
++---------------+------------------+-----------------------------------------------------------------------------+
+| Aggregation   | EUM Cloud        | Regional data is aggregated into the centralized EUM Cloud.                 |
++---------------+------------------+-----------------------------------------------------------------------------+
+| Visualization | Controller       | The Controller downloads aggregated data every minute for UI display.       |
++---------------+------------------+-----------------------------------------------------------------------------+
+</code></pre>
+<h2 id="1-the-entry-point-aws-application-load-balancers-alb"><a class="anchor" href="#1-the-entry-point-aws-application-load-balancers-alb">#</a>1. The Entry Point: AWS Application Load Balancers (ALB)</h2>
+<p>The ALB is the &quot;External Facing&quot; tier. Its primary job is <strong>Layer 7 (HTTP/HTTPS) termination</strong> and initial traffic segregation.</p>
+<ul><li><strong>Traffic Segregation:</strong> By using different ALBs for different traffic types (BRUM vs. MRUM vs. ThousandEye), the system achieves <strong>fault isolation</strong>. If the <code>Collector-proxy ALB</code> is overwhelmed by a spike in Browser traffic, the <code>TE-Collector ALB</code> remains unaffected, ensuring ThousandEye monitoring persists.</li><li><strong>SSL/TLS Termination:</strong> The ALBs handle the compute-heavy process of decrypting HTTPS traffic from the public internet. This offloads CPU cycles from the internal pods.</li><li><strong>Scalability:</strong> ALBs are managed services that scale automatically to handle throughput spikes. They act as the &quot;shock absorbers&quot; for the EUM cloud.</li></ul>
+<hr>
+<h2 id="2-the-intelligence-layer-envoy-proxy-tiers"><a class="anchor" href="#2-the-intelligence-layer-envoy-proxy-tiers">#</a>2. The Intelligence Layer: Envoy Proxy Tiers</h2>
+<p>Once the ALB accepts a request, it passes it to <strong>Envoy</strong>, a high-performance C++ distributed proxy. While the ALB is great at basic load balancing, Envoy provides the <strong>fine-grained control</strong> needed for a complex microservices environment.</p>
+<h3 id="a-collector-proxy-vs-eum-proxy"><a class="anchor" href="#a-collector-proxy-vs-eum-proxy">#</a>A. collector-proxy vs. eum-proxy</h3>
+<p>These are functional Envoy instances that act as <strong>Service Proxies</strong>.</p>
+<ul><li><strong>Header-Based Routing:</strong> Envoy can look at specific HTTP headers or paths to decide exactly which version of a Collector pod should handle the request.</li><li><strong>Retries and Timeouts:</strong> Envoy manages the &quot;Resilience Logic.&quot; If a Collector pod is momentarily slow, Envoy can automatically retry the request to a different pod before the user's browser agent times out.</li><li><strong>Circuit Breaking:</strong> If a cluster of Collector pods starts failing, Envoy &quot;trips the circuit&quot; to stop sending traffic to them, preventing a cascading failure across the entire EUM cloud.</li></ul>
+<h3 id="b-col-proxy-ctrl-the-control-plane"><a class="anchor" href="#b-col-proxy-ctrl-the-control-plane">#</a>B. col-proxy-ctrl (The Control Plane)</h3>
+<p>This is the most critical theoretical component for a distributed system.</p>
+<ul><li><strong>xDS APIs:</strong> In a modern architecture, you don't manually edit config files on 100 different proxies. Instead, Envoy uses a <strong>Control Plane</strong> (like Istio or a custom implementation) to discover its configuration.</li><li><strong>Dynamic Updates:</strong> <code>col-proxy-ctrl</code> tells the proxies about new Collector pods as they spin up (Service Discovery). It allows the system to update routing rules in real-time without restarting the proxies.</li></ul>
+<hr>
+<h2 id="3-why-have-both-the-theory-of-proxy-in-proxy"><a class="anchor" href="#3-why-have-both-the-theory-of-proxy-in-proxy">#</a>3. Why Have Both? (The Theory of &quot;Proxy-in-Proxy&quot;)</h2>
+<p>You might wonder why we don't go straight from ALB to the Collector pods. The &quot;Envoy Tier&quot; adds several &quot;Day 2&quot; operational benefits:</p>
+<ol><li><strong>Observability:</strong> Envoy generates incredibly detailed metrics (success rates, latencies per route, 4xx/5xx counts) that the AWS ALB does not provide at the same level of granularity.</li><li><strong>Protocol Translation:</strong> The ALB might receive HTTP/2 from a modern browser, and Envoy can translate that to optimized gRPC or standard HTTP/1.1 for the internal Collector pods.</li><li><strong>Security (mTLS):</strong> While the ALB handles the public certificate, the Envoy tier can handle <strong>Internal Mutual TLS</strong>, ensuring that even if an attacker gets inside the VPC, they cannot spoof traffic between the proxy and the Collector pods.</li></ol>
+<hr>
+<h3 id="summary-of-traffic-flow"><a class="anchor" href="#summary-of-traffic-flow">#</a>Summary of Traffic Flow</h3>
+<ol><li><strong>Agent</strong> (e.g., a JS Browser Agent) sends a &quot;Beacon.&quot;</li><li><strong>AWS ALB</strong> receives the HTTPS request, decrypts it, and identifies it as <code>BRUM</code> traffic.</li><li><strong>Envoy (<code>collector-proxy</code>)</strong> receives the request from the ALB. It checks the health of the Collector fleet and applies any specific routing rules (like &quot;Canary&quot; routing for a new feature).</li><li><strong>Collector Pod</strong> finally receives the validated, decrypted, and routed request to begin the <a href="https://github.com/abhishekgoyal17/Level_up/blob/main/01_EUM_session_sampling.md#6-architecture-and-flow">Session Sampling logic</a>.</li></ol>
+<h3 id="22-key-platform-concepts-for-interview"><a class="anchor" href="#22-key-platform-concepts-for-interview">#</a>2.2 Key Platform Concepts for Interview</h3>
+<p><strong>Beacon</strong> — The raw payload that an agent sends to the collector. Browser agents send HTTP POST beacons containing page load timing, AJAX results, JS errors, etc. Mobile agents send equivalent mobile-SDK beacons.</p>
+<p><strong>Collector</strong> — The front-door service in EUM Cloud that receives beacons, validates them, and converts them to internal record types. This is where your project lives.</p>
+<p><strong>BeaconProcessor</strong> — The processing component inside collector that parses beacon bytes into typed records (<code>BrowserRecord</code>, <code>MobileRecord</code>, etc.) and routes them through the validation and sampling pipeline.</p>
+<p><strong>Sessionizer</strong> — A dedicated downstream service that groups individual events/beacons into user sessions. It uses Kinesis stream partitioning by <code>agentId</code> to guarantee all events from the same session arrive at the same Kinesis consumer. This is fundamentally different from how collector works — collector is stateless across pods.</p>
+<p><strong>Decorator</strong> — Enriches session records with customer-configured labels and metadata before they are stored in the EuM Custom View Store.</p>
+<p><strong>AccountBeaconReporter</strong> — Reports valid-beacon counts and unsampled-beacon counts per app. This is what drives the EUM license consumption metrics.</p>
+<hr>
+<h2 id="3-the-problem-this-project-solved"><a class="anchor" href="#3-the-problem-this-project-solved">#</a>3. The Problem This Project Solved</h2>
+<h3 id="31-business-problem"><a class="anchor" href="#31-business-problem">#</a>3.1 Business Problem</h3>
+<p>EUM customers pay for license units based on sessions processed. Many customers had no way to control how many sessions were being processed — every user session was ingested and counted toward their license. The requirement was to build <strong>session-based sampling</strong> so customers could set a target sampling percentage (e.g., 25%) and only process that fraction of their browser sessions.</p>
+<h3 id="32-technical-challenge--why-this-is-hard"><a class="anchor" href="#32-technical-challenge--why-this-is-hard">#</a>3.2 Technical Challenge — Why This Is Hard</h3>
+<p>Sampling sounds simple: flip a coin, decide yes or no. But three constraints make it genuinely hard in the EUM context:</p>
+<p><strong>Constraint 1 — Session coherence.</strong> The sampling unit must be a session, not an individual beacon. If you randomly sample individual beacons, you can keep a user's page-view event while dropping their related AJAX call and error event. That destroys session-level analysis. The entire session must be either fully sampled or fully dropped.</p>
+<p><strong>Constraint 2 — Distributed pods.</strong> Collector runs as multiple stateless pods behind a load balancer. There is no guarantee that two beacons from the same user session hit the same pod. If both pods independently decide whether to create a session, you get race conditions where two pods each think they are creating a brand new session for the same user — leading to duplicate sessions, inconsistent sampling decisions, and wrong license accounting.</p>
+<p><strong>Constraint 3 — Latency.</strong> Collector is a hot-path ingestion service handling millions of beacons per minute. Any distributed coordination must add minimal latency. Complex locking strategies that require multiple network round-trips are not acceptable.</p>
+<h3 id="33-why-you-cannot-just-use-local-cache"><a class="anchor" href="#33-why-you-cannot-just-use-local-cache">#</a>3.3 Why You Cannot Just Use Local Cache</h3>
+<p>The intuitive solution is to keep an in-memory map in each collector pod. Pod receives a beacon, checks the map, decides accept or reject.</p>
+<p>This fails because the same session can hit different pods. Pod A creates session <code>sess_12345</code> in its local map and accepts it. Moments later, Pod B receives another beacon from the same session but does not know about <code>sess_12345</code>. Pod B creates it again and also accepts it — you now have the same session counted twice.</p>
+<p>You need a centralized, shared state store that all pods can coordinate through.</p>
+<hr>
+<h2 id="4-elevator-pitch"><a class="anchor" href="#4-elevator-pitch">#</a>4. Elevator Pitch</h2>
+<h3 id="30-second-version"><a class="anchor" href="#30-second-version">#</a>30-Second Version</h3>
+<blockquote><p>&quot;In our BRUM pipeline, multiple collector pods process millions of browser beacons per minute. We wanted customers to control EUM license usage through session-based sampling, but sampling had to be consistent across distributed collectors — otherwise the same user session could be duplicated or partially dropped. I designed and implemented a Redis + Jedis + Lua based session sampling layer in collector. Redis acted as the centralized session store, Jedis handled low-latency pooled connectivity, and Lua scripts gave us atomic session create/update decisions in a single Redis call. That let us reduce license usage by about 60% while avoiding duplicate session creation and preserving session integrity.&quot;</p></blockquote>
+<h3 id="2-minute-version"><a class="anchor" href="#2-minute-version">#</a>2-Minute Version</h3>
+<p>Our EUM Browser Real User Monitoring system ingests massive browser traffic through distributed collector pods. Each beacon eventually contributes to metrics, event pipelines, and downstream sessionization. The business requirement was to give customers a way to save license consumption by sampling browser sessions rather than processing every single session.</p>
+<p>The tricky part was that sampling had to happen <strong>early in collector</strong> so we could save compute, memory, queue traffic, and license consumption downstream. But collector is distributed — the same user's events can hit different pods. If every collector independently decides whether to create or sample a session, you get race conditions and inconsistent behavior.</p>
+<p>My solution was to introduce a small distributed session layer in collector using Redis. Each collector uses Jedis to query and update Redis. The actual decision logic — whether this is a new session, an update to an existing session, a straggler, and whether it should be sampled — runs inside Redis through a Lua script. That gave us atomicity without introducing the multiple network round trips of distributed locking approaches like Redlock.</p>
+<p>Sessions are stored with TTL so stale state is auto-cleaned. If Redis becomes unavailable, collectors can temporarily fall back to local processing so traffic continues flowing. Overall, this gave us consistent distributed sampling, lower latency, better license efficiency, and safer behavior at production scale.</p>
+<hr>
+<h2 id="5-your-exact-contribution"><a class="anchor" href="#5-your-exact-contribution">#</a>5. Your Exact Contribution</h2>
+<blockquote><p>The EUM collector and sessionizer pipeline already existed. My contribution was building the <strong>distributed session-based sampling layer inside collector</strong> using Redis, Jedis, and Lua.</p></blockquote>
+<div class="table-wrap"><table><thead><tr><th>What I built</th><th>Detail</th></tr></thead><tbody><tr><td>Distributed Session Cache Design</td><td>Introduced Redis as a centralized session store so sampling stays consistent across multiple collector pods</td></tr><tr><td>Jedis Integration</td><td>Integrated Redis access into Java collectors using pooled Jedis connections with timeouts suitable for high-throughput production traffic</td></tr><tr><td>Lua-based Atomic Sampling</td><td>Implemented the core create/update/sample workflow as a Lua script inside Redis to resolve race conditions with a single Redis call</td></tr><tr><td>Session TTL Strategy</td><td>Defined TTL-based automatic cleanup so stale sessions do not bloat Redis memory</td></tr><tr><td>Fallback Design</td><td>Added resilience so collectors can continue local processing if Redis is temporarily unavailable</td></tr><tr><td>Sampling Algorithm Design</td><td>Built session-level sampling logic with per-app counters and self-correcting behavior</td></tr></tbody></table></div>
+<hr>
+<h2 id="6-architecture-and-flow"><a class="anchor" href="#6-architecture-and-flow">#</a>6. Architecture and Flow</h2>
+<h3 id="61-high-level-flow"><a class="anchor" href="#61-high-level-flow">#</a>6.1 High-Level Flow</h3>
+<pre><code class="language-">Browser/Mobile Client
+        |
+        | HTTP beacon
+        v
+HTTP Servlet (collector)
+        |
+        v
+BeaconProcessor.processBeacon()
+        |
+        | parse beacon -&gt; records
+        | validate record
+        v
+Sampling Decision Engine
+        |
+        |--[Browser Record + sessionBasedSamplingEnabled=true]
+        |           |
+        |           v
+        |       BrumSampler.sampleBrowserRecord()
+        |           |
+        |       extract: appKey, sessionId, startTime, endTime
+        |           |
+        |       Execute Lua Script via Jedis
+        |           |
+        |           v
+        |       Redis Session Cache (sampled-session-redis-script.lua)
+        |           |
+        |           | returns: samplingStatus (true/false)
+        |           v
+        |       Sample Accepted?
+        |         YES: acceptBeaconForProcessing(record)
+        |              reportValidBeaconCount(record)
+        |              --&gt; RecordProcessor --&gt; Downstream
+        |         NO:  reportUnsampled(record)
+        |              record is dropped
+        |
+        |--[Mobile Record + mrumSamplingEnabled=true]
+        |           v
+        |       MrumSampler.sampleMobileRecord()
+        |           | (same flow as BRUM)
+        |
+        |--[Other Records]
+                    v
+                No sampling, pass through directly</code></pre>
+<h3 id="62-inside-the-redis-session-decision"><a class="anchor" href="#62-inside-the-redis-session-decision">#</a>6.2 Inside the Redis Session Decision</h3>
+<p>When BrumSampler calls Redis via the Lua script, the following happens atomically in a single round-trip:</p>
+<pre><code class="language-">Input: KEYS[1..4] + ARGV[1..5]
+    KEYS[1] = sampled_session:{appKey}:{sessionId}
+    KEYS[2] = total_sessions_count:{appKey}
+    KEYS[3] = accepted_sessions_count:{appKey}
+    KEYS[4] = sampling_percentage:{appKey}
+    ARGV[1] = session JSON (startTimeMs, endTimeMs, samplingStatus=false)
+    ARGV[2] = startTimeMs
+    ARGV[3] = endTimeMs
+    ARGV[4] = timeoutMs
+    ARGV[5] = targetSamplingPercentage
+
+Decision flow inside Lua:
+    if session key exists:
+        if event time overlaps existing session window (with timeout):
+            update session boundaries (min start, max end)
+            refresh TTL
+            return existing samplingStatus   &lt;-- session continuity
+        else:
+            treat as new session (straggler replaces old session)
+    else:
+        if very first session for this app:
+            always ACCEPT (bootstrap)
+            init counters (total=1, accepted=1)
+        else:
+            current_pct = accepted_sessions / total_sessions * 100
+            if current_pct &lt; target_pct:  ACCEPT (incr both counters)
+            if current_pct &gt; target_pct:  REJECT (incr total only)
+            if current_pct == target_pct: RANDOM (math.random(1..100) &lt;= target?)
+        
+        set samplingStatus in session JSON
+        set TTL = 600s + timeoutMs/1000
+        return samplingStatus</code></pre>
+<h3 id="63-sampling-decision-engine--object-model"><a class="anchor" href="#63-sampling-decision-engine--object-model">#</a>6.3 Sampling Decision Engine — Object Model</h3>
+<p>The Sampling Decision Engine is triggered inside <code>BeaconProcessor</code> and classifies incoming records:</p>
+<div class="table-wrap"><table><thead><tr><th>Record Type</th><th>Condition</th><th>Sampler Invoked</th></tr></thead><tbody><tr><td><code>BrowserRecord</code></td><td><code>sessionBasedSamplingEnabled = true</code></td><td><code>BrumSampler.sampleBrowserRecord()</code></td></tr><tr><td><code>MobileRecord</code></td><td><code>mrumSamplingEnabled = true</code></td><td><code>MrumSampler.sampleMobileRecord()</code></td></tr><tr><td>Other (<code>ARecord</code>, etc.)</td><td><code>samplingRequired = false</code></td><td>Bypasses sampling entirely</td></tr></tbody></table></div>
+<hr>
+<h2 id="7-redis-data-model--complete-reference"><a class="anchor" href="#7-redis-data-model--complete-reference">#</a>7. Redis Data Model — Complete Reference</h2>
+<p>This section is the comprehensive reference for everything stored in Redis as part of session-based sampling. All keys are namespaced per <code>appKey</code> to ensure complete isolation between applications sharing the same Redis instance.</p>
+<h3 id="71-key-naming-convention"><a class="anchor" href="#71-key-naming-convention">#</a>7.1 Key Naming Convention</h3>
+<pre><code class="language-">Pattern:   {key_type}:{appKey}[:{sessionId}]
+Separator: colon (:)
+Scope:     All 4 keys are scoped per appKey
+           Session key additionally scoped per sessionId</code></pre>
+<h3 id="72-complete-key-inventory"><a class="anchor" href="#72-complete-key-inventory">#</a>7.2 Complete Key Inventory</h3>
+<pre><code class="language-">Key 1 — Session Data Key (per session):
+  Pattern:  sampled_session:{appKey}:{sessionId}
+  Example:  sampled_session:EX-AAA-AUM:session_12345
+  Type:     JSON (Redis JSON / ReJSON module)
+  Purpose:  Stores session time boundaries + sampling decision
+  TTL:      600s + (timeoutMillis / 1000)  →  auto-expires
+
+Key 2 — Total Sessions Counter (per app):
+  Pattern:  total_sessions_count:{appKey}
+  Example:  total_sessions_count:EX-AAA-AUM
+  Type:     Integer (Redis String, numeric)
+  Purpose:  Running count of ALL sessions seen for this app (sampled + dropped)
+  TTL:      None (persistent counter)
+  Incremented by: Every new session creation
+
+Key 3 — Accepted Sessions Counter (per app):
+  Pattern:  accepted_sessions_count:{appKey}
+  Example:  accepted_sessions_count:EX-AAA-AUM
+  Type:     Integer (Redis String, numeric)
+  Purpose:  Running count of only ACCEPTED sessions for this app
+  TTL:      None (persistent counter)
+  Incremented by: Only accepted new sessions
+
+Key 4 — Sampling Percentage (per app):
+  Pattern:  sampling_percentage:{appKey}
+  Example:  sampling_percentage:EX-AAA-AUM
+  Type:     Integer (Redis String, numeric)
+  Purpose:  Target sampling percentage configured for this app (0-100)
+  TTL:      None (persistent config)
+  Set by:   First session creation for the app (cold start)</code></pre>
+<h3 id="73-key-lifecycle"><a class="anchor" href="#73-key-lifecycle">#</a>7.3 Key Lifecycle</h3>
+<pre><code class="language-">Cold Start (first session for app):
+  WRITE: sampled_session:{appKey}:{sessionId}   ← created
+  WRITE: total_sessions_count:{appKey}           ← SET 1
+  WRITE: accepted_sessions_count:{appKey}        ← SET 1
+  WRITE: sampling_percentage:{appKey}            ← SET {target}
+
+Subsequent New Session:
+  READ:  total_sessions_count:{appKey}
+  READ:  accepted_sessions_count:{appKey}
+  READ:  sampling_percentage:{appKey}
+  WRITE: sampled_session:{appKey}:{sessionId}   ← created
+  WRITE: total_sessions_count:{appKey}           ← INCR (always)
+  WRITE: accepted_sessions_count:{appKey}        ← INCR (only if accepted)
+
+Existing Session Update:
+  READ:  sampled_session:{appKey}:{sessionId}   ← check existence + boundaries
+  WRITE: sampled_session:{appKey}:{sessionId}   ← update startTimeMs / endTimeMs
+  WRITE: sampled_session:{appKey}:{sessionId}   ← refresh TTL (EXPIRE)
+  (counters are NOT touched for existing session updates)</code></pre>
+<h3 id="74-isolation-and-namespace-design"><a class="anchor" href="#74-isolation-and-namespace-design">#</a>7.4 Isolation and Namespace Design</h3>
+<p>Each <code>appKey</code> has exactly 3 persistent keys (counters + config) plus N session keys (one per active session). Keys from different apps never interfere:</p>
+<pre><code class="language-">App: EX-AAA-AUM (target: 25%)
+  total_sessions_count:EX-AAA-AUM = 500
+  accepted_sessions_count:EX-AAA-AUM = 125
+  sampling_percentage:EX-AAA-AUM = 25
+  sampled_session:EX-AAA-AUM:sess_001 = {...}
+  sampled_session:EX-AAA-AUM:sess_002 = {...}
+
+App: EX-BBB-XYZ (target: 50%)
+  total_sessions_count:EX-BBB-XYZ = 200
+  accepted_sessions_count:EX-BBB-XYZ = 100
+  sampling_percentage:EX-BBB-XYZ = 50
+  sampled_session:EX-BBB-XYZ:sess_001 = {...}</code></pre>
+<h3 id="75-lua-script-parameters--mapping-to-keys"><a class="anchor" href="#75-lua-script-parameters--mapping-to-keys">#</a>7.5 Lua Script Parameters — Mapping to Keys</h3>
+<pre><code class="language-lua">-- KEYS array: Redis key references
+KEYS[1] = &quot;sampled_session:{appKey}:{sessionId}&quot;   -- session data
+KEYS[2] = &quot;total_sessions_count:{appKey}&quot;           -- total counter
+KEYS[3] = &quot;accepted_sessions_count:{appKey}&quot;        -- accepted counter
+KEYS[4] = &quot;sampling_percentage:{appKey}&quot;            -- target %
+
+-- ARGV array: runtime values passed from Java (Jedis)
+ARGV[1] = '{&quot;startTimeMs&quot;:...,&quot;endTimeMs&quot;:...,&quot;samplingStatus&quot;:&quot;false&quot;}'
+ARGV[2] = startTimeMs (long, epoch ms)
+ARGV[3] = endTimeMs   (long, epoch ms)
+ARGV[4] = timeoutMs   (long, ms — session gap tolerance)
+ARGV[5] = targetSamplingPercentage (int, 0-100)</code></pre>
+<hr>
+<h2 id="8-session-object-schema--full-specification"><a class="anchor" href="#8-session-object-schema--full-specification">#</a>8. Session Object Schema — Full Specification</h2>
+<h3 id="81-session-json-structure"><a class="anchor" href="#81-session-json-structure">#</a>8.1 Session JSON Structure</h3>
+<p>The session JSON object stored at <code>sampled_session:{appKey}:{sessionId}</code> contains exactly 3 fields:</p>
+<pre><code class="language-json">{
+  &quot;startTimeMs&quot;: 1698765432100,
+  &quot;endTimeMs&quot;:   1698765445200,
+  &quot;samplingStatus&quot;: &quot;true&quot;
+}</code></pre>
+<h3 id="82-field-definitions"><a class="anchor" href="#82-field-definitions">#</a>8.2 Field Definitions</h3>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Type</th><th>Description</th><th>Set When</th></tr></thead><tbody><tr><td><code>startTimeMs</code></td><td><code>long</code> (epoch ms)</td><td>Earliest event start time seen in this session</td><td>On creation (from ARGV[2]); updated if a later beacon has an earlier start</td></tr><tr><td><code>endTimeMs</code></td><td><code>long</code> (epoch ms)</td><td>Latest event end time seen in this session</td><td>On creation (from ARGV[3]); updated if a later beacon has a later end</td></tr><tr><td><code>samplingStatus</code></td><td><code>&quot;true&quot;</code> or <code>&quot;false&quot;</code> (string)</td><td>Whether this session is accepted for processing</td><td>On creation (sampling decision); never changed after first set</td></tr></tbody></table></div>
+<h3 id="83-field-behavior-detail"><a class="anchor" href="#83-field-behavior-detail">#</a>8.3 Field Behavior Detail</h3>
+<p><strong><code>startTimeMs</code></strong> — always holds the minimum start across all beacons seen for this session. Each incoming beacon may report an earlier start (e.g., a background XHR that started before the page started). The Lua script extends the window backward if <code>new_start &lt; stored_start</code>.</p>
+<p><strong><code>endTimeMs</code></strong> — always holds the maximum end across all beacons seen for this session. The Lua script extends the window forward if <code>new_end &gt; stored_end</code>.</p>
+<p><strong><code>samplingStatus</code></strong> — immutable after first write. Once a session is decided as accepted (<code>&quot;true&quot;</code>) or rejected (<code>&quot;false&quot;</code>), all subsequent beacons for that session return the same status. This is the session coherence guarantee. Note: stored as a string (<code>&quot;true&quot;</code> / <code>&quot;false&quot;</code>), not a JSON boolean.</p>
+<h3 id="84-schema-initialization-argv1-template"><a class="anchor" href="#84-schema-initialization-argv1-template">#</a>8.4 Schema Initialization (ARGV[1] template)</h3>
+<p>When a new session is first created, the Java code constructs the initial JSON and passes it as ARGV[1] with <code>samplingStatus</code> defaulted to <code>&quot;false&quot;</code>. The Lua script then overwrites <code>samplingStatus</code> with the actual decision before returning:</p>
+<pre><code class="language-json">{
+  &quot;startTimeMs&quot;: &lt;from beacon&gt;,
+  &quot;endTimeMs&quot;:   &lt;from beacon&gt;,
+  &quot;samplingStatus&quot;: &quot;false&quot;
+}</code></pre>
+<p>The Lua script then calls <code>JSON.SET key .samplingStatus &quot;true&quot;</code> or <code>&quot;false&quot;</code> based on the sampling decision.</p>
+<h3 id="85-why-the-schema-is-intentionally-minimal"><a class="anchor" href="#85-why-the-schema-is-intentionally-minimal">#</a>8.5 Why the Schema Is Intentionally Minimal</h3>
+<p>Every beacon for every active session triggers a Redis read (EXISTS + JSON.GET) and potentially a write. At millions of beacons per minute, even small schema additions multiply into meaningful overhead:</p>
+<ul><li>Each additional field adds network payload per round-trip</li><li>Redis JSON parse/serialize cost scales with object size</li><li>Lua script complexity grows with more field accesses</li></ul>
+<p>Storing only <code>startTimeMs</code>, <code>endTimeMs</code>, <code>samplingStatus</code> keeps the per-operation cost as small as possible.</p>
+<h3 id="86-ttl-calculation"><a class="anchor" href="#86-ttl-calculation">#</a>8.6 TTL Calculation</h3>
+<pre><code class="language-">TTL = sampled_session_retention_time_seconds + (timeoutMillis / 1000)
+    = 600s                                   + 30s   (for 30s timeout config)
+    = 630 seconds
+
+Set via: EXPIRE sampled_session:{appKey}:{sessionId} 630
+Refreshed on: every beacon update (existing session path)
+Expires on:   no beacons received for 630 seconds</code></pre>
+<p>The <code>timeoutMillis</code> is the session gap tolerance — the maximum gap between beacons still considered part of the same session. Adding it to the base TTL ensures the session key does not expire during a legitimate gap.</p>
+<h3 id="87-counter-schema"><a class="anchor" href="#87-counter-schema">#</a>8.7 Counter Schema</h3>
+<p>The two counter keys store plain integers managed via Redis INCR:</p>
+<pre><code class="language-">total_sessions_count:{appKey}    → integer
+accepted_sessions_count:{appKey} → integer
+
+Sampling ratio = accepted / total * 100</code></pre>
+<p>Counter keys have no TTL. They persist across session expirations and accumulate for the lifetime of the application key in Redis.</p>
+<hr>
+<h2 id="9-lua-script--atomic-session-decision"><a class="anchor" href="#9-lua-script--atomic-session-decision">#</a>9. Lua Script — Atomic Session Decision</h2>
+<h3 id="91-why-lua-instead-of-redlock"><a class="anchor" href="#91-why-lua-instead-of-redlock">#</a>9.1 Why Lua Instead of Redlock</h3>
+<p>This was the most important design decision in the project. Two approaches were considered:</p>
+<p><strong>Redlock (distributed locking):</strong></p>
+<ul><li>Acquire lock on session key</li><li>Read current session state</li><li>Update session state</li><li>Release lock</li></ul>
+<p>Problem: this is 3+ network round trips to Redis per beacon. At millions of beacons per minute, this adds significant latency and load on the Redis cluster.</p>
+<p><strong>Lua Script in Redis:</strong></p>
+<ul><li>Send one <code>EVALSHA</code> call with all inputs</li><li>Redis executes the full read-check-update-decide workflow atomically server-side</li><li>One network round trip, total</li></ul>
+<p>Result: same atomicity guarantee, fewer round trips, lower latency, simpler control flow.</p>
+<blockquote><p><strong>Interview framing:</strong> &quot;Same correctness goal, fewer round trips, lower latency, simpler operationally. In a collector path doing millions of operations per minute, this difference matters.&quot;</p></blockquote>
+<h3 id="92-atomicity-guarantee"><a class="anchor" href="#92-atomicity-guarantee">#</a>9.2 Atomicity Guarantee</h3>
+<p>Redis runs Lua scripts atomically. No other command can execute while a Lua script is running. This means:</p>
+<ul><li>Two collectors submitting simultaneous requests for <code>sess_12345</code> will be serialized by Redis</li><li>The second caller sees the state written by the first — no duplicate session creation</li><li>No distributed locks needed at the application layer</li></ul>
+<h3 id="93-core-script-logic-pseudocode"><a class="anchor" href="#93-core-script-logic-pseudocode">#</a>9.3 Core Script Logic (Pseudocode)</h3>
+<pre><code class="language-lua">-- Check if session already exists
+local session_exists = redis.call('EXISTS', KEYS[1])
+
+if session_exists == 1 then
+    -- Existing session: check time overlap
+    local stored_start = JSON.GET(KEYS[1], '.startTimeMs')
+    local stored_end   = JSON.GET(KEYS[1], '.endTimeMs')
+    local new_start    = ARGV[2]
+    local new_end      = ARGV[3]
+    local timeout      = ARGV[4]
+    
+    -- Time overlap check
+    if new_end &gt;= (stored_start - timeout) and new_start &lt;= (stored_end + timeout) then
+        -- Same session: update boundaries, return existing decision
+        if stored_start &gt; new_start then JSON.SET(KEYS[1], '.startTimeMs', new_start) end
+        if stored_end   &lt; new_end   then JSON.SET(KEYS[1], '.endTimeMs',   new_end)   end
+        redis.call('EXPIRE', KEYS[1], TTL)
+        return JSON.GET(KEYS[1], '.samplingStatus')
+    end
+end
+
+-- New session: create entry
+JSON.SET(KEYS[1], '.', ARGV[1])
+
+-- Initialize or read counters
+local accepted = tonumber(redis.call('GET', KEYS[3])) or 0
+local total    = tonumber(redis.call('GET', KEYS[2])) or 0
+local target   = tonumber(ARGV[5])
+
+if total == 0 then
+    -- First ever session for this app: always accept
+    redis.call('SET', KEYS[4], target)
+    redis.call('SET', KEYS[2], 1)
+    redis.call('SET', KEYS[3], 1)
+    JSON.SET(KEYS[1], '.samplingStatus', 'true')
+else
+    local current_pct = accepted / total * 100
+    redis.call('INCR', KEYS[2])  -- always increment total
+
+    if current_pct &lt; target then
+        -- Under target: ACCEPT
+        redis.call('INCR', KEYS[3])
+        JSON.SET(KEYS[1], '.samplingStatus', 'true')
+    elseif current_pct &gt; target then
+        -- Over target: REJECT (do NOT increment accepted)
+        JSON.SET(KEYS[1], '.samplingStatus', 'false')
+    else
+        -- At target: random decision
+        local rand = math.random(100)
+        if rand &lt;= target then
+            redis.call('INCR', KEYS[3])
+            JSON.SET(KEYS[1], '.samplingStatus', 'true')
+        else
+            JSON.SET(KEYS[1], '.samplingStatus', 'false')
+        end
+    end
+end
+
+-- Set TTL and return
+redis.call('EXPIRE', KEYS[1], 600 + tonumber(ARGV[4]) / 1000)
+return JSON.GET(KEYS[1], '.samplingStatus')</code></pre>
+<hr>
+<h2 id="10-sampling-algorithm--5-scenarios"><a class="anchor" href="#10-sampling-algorithm--5-scenarios">#</a>10. Sampling Algorithm — 5 Scenarios</h2>
+<h3 id="scenario-1-brand-new-session-cold-start"><a class="anchor" href="#scenario-1-brand-new-session-cold-start">#</a>Scenario 1: Brand New Session (Cold Start)</h3>
+<p><strong>State:</strong> Redis DB is empty. First session ever for <code>EX-AAA-AUM</code>.</p>
+<p><strong>Script Parameters:</strong></p>
+<pre><code class="language-">KEYS[1] = &quot;sampled_session:EX-AAA-AUM:session_12345&quot;
+KEYS[2] = &quot;total_sessions_count:EX-AAA-AUM&quot;
+KEYS[3] = &quot;accepted_sessions_count:EX-AAA-AUM&quot;
+KEYS[4] = &quot;sampling_percentage:EX-AAA-AUM&quot;
+ARGV[5] = 25  (target: 25%)</code></pre>
+<p><strong>Redis Execution:</strong></p>
+<pre><code class="language-lua">EXISTS &quot;sampled_session:EX-AAA-AUM:session_12345&quot;
+-- Result: 0 (not found)
+
+JSON.SET &quot;sampled_session:EX-AAA-AUM:session_12345&quot; &quot;.&quot;
+  '{&quot;startTimeMs&quot;:1698765432100,&quot;endTimeMs&quot;:1698765445200,&quot;samplingStatus&quot;:&quot;false&quot;}'
+
+SET &quot;sampling_percentage:EX-AAA-AUM&quot; 25
+SET &quot;total_sessions_count:EX-AAA-AUM&quot; 1
+SET &quot;accepted_sessions_count:EX-AAA-AUM&quot; 1
+JSON.SET &quot;sampled_session:EX-AAA-AUM:session_12345&quot; &quot;.samplingStatus&quot; &quot;true&quot;
+
+EXPIRE &quot;sampled_session:EX-AAA-AUM:session_12345&quot; 630
+JSON.GET &quot;sampled_session:EX-AAA-AUM:session_12345&quot; &quot;.samplingStatus&quot;
+-- Returns: &quot;true&quot;</code></pre>
+<p><strong>Post-state:</strong></p>
+<pre><code class="language-">sampled_session:EX-AAA-AUM:session_12345 = {&quot;startTimeMs&quot;:...,&quot;endTimeMs&quot;:...,&quot;samplingStatus&quot;:&quot;true&quot;}
+total_sessions_count:EX-AAA-AUM          = 1
+accepted_sessions_count:EX-AAA-AUM       = 1
+sampling_percentage:EX-AAA-AUM           = 25</code></pre>
+<p><strong>Result:</strong> SESSION ACCEPTED — first session always bootstraps the system.</p>
+<hr>
+<h3 id="scenario-2-new-session--under-target"><a class="anchor" href="#scenario-2-new-session--under-target">#</a>Scenario 2: New Session — Under Target</h3>
+<p><strong>State:</strong></p>
+<pre><code class="language-">total_sessions_count:EX-AAA-AUM    = 100
+accepted_sessions_count:EX-AAA-AUM = 20
+Current ratio: 20/100 * 100        = 20%
+Target:                              25%</code></pre>
+<p><strong>Redis Execution:</strong></p>
+<pre><code class="language-lua">EXISTS &quot;sampled_session:EX-AAA-AUM:session_67890&quot;  -- 0 (new session)
+
+GET &quot;accepted_sessions_count:EX-AAA-AUM&quot;  -- &quot;20&quot;
+GET &quot;total_sessions_count:EX-AAA-AUM&quot;     -- &quot;100&quot;
+GET &quot;sampling_percentage:EX-AAA-AUM&quot;      -- &quot;25&quot;
+
+-- current_pct (20%) &lt; target_pct (25%) --&gt; ACCEPT
+INCR &quot;total_sessions_count:EX-AAA-AUM&quot;    -- now: 101
+INCR &quot;accepted_sessions_count:EX-AAA-AUM&quot; -- now: 21
+JSON.SET &quot;.samplingStatus&quot; &quot;true&quot;
+
+EXPIRE ... 630
+-- Returns: &quot;true&quot;</code></pre>
+<p><strong>Post-state counter drift:</strong> 21/101 = 20.79% — moving toward 25%.</p>
+<p><strong>Result:</strong> SESSION ACCEPTED — system needs more sessions to reach 25%.</p>
+<hr>
+<h3 id="scenario-3-new-session--over-target"><a class="anchor" href="#scenario-3-new-session--over-target">#</a>Scenario 3: New Session — Over Target</h3>
+<p><strong>State:</strong></p>
+<pre><code class="language-">total_sessions_count:EX-AAA-AUM    = 100
+accepted_sessions_count:EX-AAA-AUM = 28
+Current ratio: 28/100 * 100        = 28%
+Target:                              25%</code></pre>
+<p><strong>Redis Execution:</strong></p>
+<pre><code class="language-lua">EXISTS &quot;sampled_session:EX-AAA-AUM:session_11111&quot;  -- 0 (new session)
+
+-- current_pct (28%) &gt; target_pct (25%) --&gt; REJECT
+INCR &quot;total_sessions_count:EX-AAA-AUM&quot;    -- now: 101  (only total)
+-- accepted_sessions_count stays: 28
+JSON.SET &quot;.samplingStatus&quot; &quot;false&quot;
+
+EXPIRE ... 630
+-- Returns: &quot;false&quot;</code></pre>
+<p><strong>Post-state counter drift:</strong> 28/101 = 27.72% — moving toward 25%.</p>
+<p><strong>Result:</strong> SESSION REJECTED — system is over quota, self-corrects toward 25%.</p>
+<hr>
+<h3 id="scenario-4-new-session--exactly-at-target-random"><a class="anchor" href="#scenario-4-new-session--exactly-at-target-random">#</a>Scenario 4: New Session — Exactly At Target (Random)</h3>
+<p><strong>State:</strong></p>
+<pre><code class="language-">total_sessions_count:EX-AAA-AUM    = 100
+accepted_sessions_count:EX-AAA-AUM = 25
+Current ratio: 25/100 * 100        = 25%
+Target:                              25%</code></pre>
+<p><strong>Redis Execution:</strong></p>
+<pre><code class="language-lua">EXISTS &quot;sampled_session:EX-AAA-AUM:session_22222&quot;  -- 0 (new session)
+
+-- current_pct (25%) == target_pct (25%) --&gt; RANDOM
+INCR &quot;total_sessions_count:EX-AAA-AUM&quot;  -- now: 101
+
+local rand = math.random(100)  -- e.g. returns 18
+if 18 &lt;= 25 then
+    INCR &quot;accepted_sessions_count:EX-AAA-AUM&quot;  -- now: 26
+    JSON.SET &quot;.samplingStatus&quot; &quot;true&quot;
+else
+    JSON.SET &quot;.samplingStatus&quot; &quot;false&quot;
+end
+
+EXPIRE ... 630
+-- Returns: &quot;true&quot; (rand 18 &lt;= target 25)</code></pre>
+<p><strong>Result:</strong> SESSION ACCEPTED (probabilistic). Expected statistical fluctuation around 25%.</p>
+<hr>
+<h3 id="scenario-5-existing-session--update-boundaries"><a class="anchor" href="#scenario-5-existing-session--update-boundaries">#</a>Scenario 5: Existing Session — Update Boundaries</h3>
+<p><strong>State:</strong></p>
+<pre><code class="language-">sampled_session:EX-AAA-AUM:session_12345 already exists:
+{
+  &quot;startTimeMs&quot;: 1698765432100,
+  &quot;endTimeMs&quot;:   1698765445200,
+  &quot;samplingStatus&quot;: &quot;true&quot;
+}
+
+New event arrives:
+  startTime = 1698765430000  (earlier than stored)
+  endTime   = 1698765450000  (later than stored)
+  timeout   = 30000ms</code></pre>
+<p><strong>Redis Execution:</strong></p>
+<pre><code class="language-lua">EXISTS &quot;sampled_session:EX-AAA-AUM:session_12345&quot;  -- 1 (found)
+
+JSON.GET &quot;.startTimeMs&quot;  -- 1698765432100
+JSON.GET &quot;.endTimeMs&quot;    -- 1698765445200
+
+-- Time overlap check:
+-- new_end   (1698765450000) &gt;= stored_start (1698765432100) - 30000 = 1698765402100 --&gt; YES
+-- new_start (1698765430000) &lt;= stored_end   (1698765445200) + 30000 = 1698765475200 --&gt; YES
+-- OVERLAP CONFIRMED: same session
+
+-- Extend boundaries:
+if stored_start (1698765432100) &gt; new_start (1698765430000) then
+    JSON.SET &quot;.startTimeMs&quot; &quot;1698765430000&quot;   -- pushed back
+end
+if stored_end (1698765445200) &lt; new_end (1698765450000) then
+    JSON.SET &quot;.endTimeMs&quot; &quot;1698765450000&quot;     -- pushed forward
+end
+
+EXPIRE key 630  -- refreshed
+JSON.GET &quot;.samplingStatus&quot;
+-- Returns: &quot;true&quot;  (unchanged from original decision)</code></pre>
+<p><strong>Post-state session object:</strong></p>
+<pre><code class="language-json">{
+  &quot;startTimeMs&quot;: 1698765430000,
+  &quot;endTimeMs&quot;:   1698765450000,
+  &quot;samplingStatus&quot;: &quot;true&quot;
+}</code></pre>
+<p><strong>Result:</strong> CONTINUE EXISTING SESSION — boundaries extended, decision unchanged.</p>
+<hr>
+<h2 id="11-where-this-fits-in-collector-flow"><a class="anchor" href="#11-where-this-fits-in-collector-flow">#</a>11. Where This Fits in Collector Flow</h2>
+<p>Sampling was placed <strong>intentionally early</strong> in the collector pipeline:</p>
+<pre><code class="language-">Browser Beacon hits collector
+        |
+        v
+BeaconProcessor: parse + validate
+        |
+        v
+[SAMPLING GATE — Redis + Jedis + Lua]  &lt;-- YOUR PROJECT
+        |
+  ACCEPT        REJECT
+    |               |
+    v               v
+Record Queue    Record Dropped
+(only sampled   reportUnsampled()
+ sessions)
+    |
+    v
+Downstream:
+  Metrics Pipeline
+  Event Grouper
+  Crash Grouper
+  Sessionizer (Kinesis)
+  Decorator</code></pre>
+<p><strong>Why early placement matters:</strong> If you sample too late, you still pay for:</p>
+<ul><li>Record creation and object allocation</li><li>Validation CPU cycles</li><li>Queue memory and capacity</li><li>SQS/Kinesis message transmission</li><li>Downstream pipeline execution</li><li>License accounting for sessions that will be dropped anyway</li></ul>
+<p>Sampling early in collector means unsampled sessions are dropped <strong>before</strong> they consume any of those resources.</p>
+<hr>
+<h2 id="12-design-decisions-and-tradeoffs"><a class="anchor" href="#12-design-decisions-and-tradeoffs">#</a>12. Design Decisions and Tradeoffs</h2>
+<h3 id="why-redis"><a class="anchor" href="#why-redis">#</a>Why Redis?</h3>
+<p>Redis provides:</p>
+<ul><li>Sub-millisecond read/write latency at scale</li><li>Built-in TTL support — automatic key expiration</li><li>Server-side Lua scripting with atomic execution guarantee</li><li>Wide operational familiarity in production infrastructure</li></ul>
+<p>Alternative considered: an in-memory distributed cache like Memcached — but it lacks Lua scripting support, making the atomic session-decision pattern impossible without application-level locking.</p>
+<h3 id="why-jedis"><a class="anchor" href="#why-jedis">#</a>Why Jedis?</h3>
+<p>The EUM collector is a Java service. Jedis is a mature, battle-tested Java Redis client with:</p>
+<ul><li>Built-in connection pooling (<code>JedisPool</code> / <code>JedisPooled</code>)</li><li>Configurable read/write timeouts</li><li><code>evalsha</code> support for Lua script pre-loading</li><li>Low dependency footprint</li></ul>
+<p>Pooling is important because many beacon-processing threads need to hit Redis concurrently. A single shared connection would serialize all requests.</p>
+<h3 id="why-lua-instead-of-redlock"><a class="anchor" href="#why-lua-instead-of-redlock">#</a>Why Lua Instead of Redlock?</h3>
+<div class="table-wrap"><table><thead><tr><th></th><th>Redlock</th><th>Lua Script</th></tr></thead><tbody><tr><td>Network round trips</td><td>3+ (lock acquire, read, write, lock release)</td><td>1 (single EVALSHA)</td></tr><tr><td>Atomicity</td><td>Via distributed locking</td><td>Redis native atomic execution</td></tr><tr><td>Complexity</td><td>Lock management, deadlock handling, retry logic</td><td>Single script file</td></tr><tr><td>Latency impact</td><td>High</td><td>Minimal</td></tr><tr><td>Failure mode</td><td>Lock can expire mid-operation</td><td>Script completes or fails atomically</td></tr></tbody></table></div>
+<p>In a latency-sensitive ingestion path, the 1-call Lua approach wins clearly.</p>
+<h3 id="why-not-use-collector-local-cache-only"><a class="anchor" href="#why-not-use-collector-local-cache-only">#</a>Why Not Use Collector Local Cache Only?</h3>
+<p>Collector is a stateless, horizontally scaled service. Multiple pods can receive events for the same session simultaneously. A local in-memory map only knows about events processed by that specific pod. There is no cross-pod shared state, so you cannot guarantee consistent sampling decisions for the same session.</p>
+<h3 id="why-ttl-instead-of-explicit-cleanup"><a class="anchor" href="#why-ttl-instead-of-explicit-cleanup">#</a>Why TTL Instead of Explicit Cleanup?</h3>
+<p>Explicit cleanup (a scheduled job that deletes old sessions) adds:</p>
+<ul><li>Operational complexity</li><li>Risk of premature deletion for active sessions</li><li>Need for distributed coordination on cleanup itself</li></ul>
+<p>TTL aligns cleanup with the session lifecycle automatically. When a session is no longer active and the TTL expires, Redis removes the key. No code needed.</p>
+<h3 id="why-keep-the-session-object-small"><a class="anchor" href="#why-keep-the-session-object-small">#</a>Why Keep the Session Object Small?</h3>
+<p>Every beacon for every session triggers a Redis read. At millions of beacons per minute, even small increases in payload size multiply into meaningful network, memory, and CPU overhead. Storing only <code>startTimeMs</code>, <code>endTimeMs</code>, and <code>samplingStatus</code> keeps the Redis footprint minimal.</p>
+<h3 id="fallback-tradeoff"><a class="anchor" href="#fallback-tradeoff">#</a>Fallback Tradeoff</h3>
+<p>When Redis becomes unavailable:</p>
+<ul><li>Strict centralized sampling consistency is impossible</li><li>Collectors fall back to local processing to avoid blocking ingestion</li><li>Some sessions may be double-counted or not sampled correctly during the outage window</li><li>Availability is prioritized over perfect sampling consistency</li></ul>
+<p>This is the correct tradeoff for a front-door ingestion service where data loss (blocking beacons) is worse than temporary sampling inaccuracy.</p>
+<hr>
+<h2 id="13-impact-and-metrics"><a class="anchor" href="#13-impact-and-metrics">#</a>13. Impact and Metrics</h2>
+<div class="table-wrap"><table><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody><tr><td>Reduction in EUM license usage</td><td>~60% through session-level sampling</td></tr><tr><td>Redis round-trips per sampling decision</td><td>1 (single EVALSHA call via Lua)</td></tr><tr><td>Target session create/update latency</td><td>&lt; 5ms</td></tr><tr><td>Session TTL buffer</td><td>600s + session timeout</td></tr><tr><td>Redis connection pool size</td><td>40 connections</td></tr><tr><td>Redis client timeout</td><td>1500ms</td></tr></tbody></table></div>
+<h3 id="how-to-explain-the-60-reduction"><a class="anchor" href="#how-to-explain-the-60-reduction">#</a>How to Explain the 60% Reduction</h3>
+<blockquote><p>&quot;The reduction came from dropping unsampled sessions early in collector before they consumed downstream license-relevant processing. Because the decision was session-consistent and centralized in Redis, we reduced overall license usage without corrupting session-level observability for the sampled sessions.&quot;</p></blockquote>
+<hr>
+<h2 id="14-core-components-reference"><a class="anchor" href="#14-core-components-reference">#</a>14. Core Components Reference</h2>
+<div class="table-wrap"><table><thead><tr><th>Component</th><th>Responsibility</th></tr></thead><tbody><tr><td><code>BeaconProcessor</code></td><td>Main entry point — parses beacons, routes to samplers</td></tr><tr><td><code>BrumSampler</code></td><td>Browser session sampling logic — calls Lua via Jedis</td></tr><tr><td><code>MrumSampler</code></td><td>Mobile session sampling logic — same algorithm</td></tr><tr><td><code>RedisSampledSessionModule</code></td><td>Jedis connection management, script loading</td></tr><tr><td><code>SessionSamplingModule</code></td><td>Configuration wiring and feature-flag control</td></tr><tr><td><code>sampled-session-redis-script.lua</code></td><td>Atomic session decision — the core algorithm</td></tr><tr><td><code>AccountBeaconReporter</code></td><td>Reports valid and unsampled beacon counts for license accounting</td></tr></tbody></table></div>
+<h3 id="class-level-detail"><a class="anchor" href="#class-level-detail">#</a>Class-Level Detail</h3>
+<p><strong>BrumSampler.sampleBrowserRecord(BrowserJsonBeacon)</strong></p>
+<ol><li>Extract <code>appKey</code>, <code>sessionId</code>, <code>startTimeMs</code>, <code>endTimeMs</code> from beacon</li><li>Build KEYS array: <code>[sessionKey, totalCountKey, acceptedCountKey, percentageKey]</code></li><li>Build ARGV array: <code>[sessionJson, startTime, endTime, timeout, targetPct]</code></li><li>Call <code>jedis.evalsha(scriptSha, keys, args)</code> — single Redis round trip</li><li>Parse return value: <code>&quot;true&quot;</code> = sample, <code>&quot;false&quot;</code> = drop</li><li>Call <code>acceptBeaconForProcessing(record)</code> or <code>reportUnsampledBeaconCount(record)</code></li></ol>
+<p><strong>RedisSampledSessionCache configuration:</strong></p>
+<pre><code class="language-">host          = localhost (or Redis cluster endpoint)
+port          = 6379
+timeout       = 1500ms
+maxConnections = 40
+scriptName    = sampled-session-redis-script.lua
+scriptType    = Redis Lua Script</code></pre>
+<hr>
+<h2 id="15-configuration-properties"><a class="anchor" href="#15-configuration-properties">#</a>15. Configuration Properties</h2>
+<div class="table-wrap"><table><thead><tr><th>Property</th><th>Location</th><th>Purpose</th><th>Default</th></tr></thead><tbody><tr><td><code>sessionBasedSamplingEnabled</code></td><td>CollectorConfiguration</td><td>Enable/disable BRUM sampling</td><td><code>false</code></td></tr><tr><td><code>mrumSamplingEnabled</code></td><td>CollectorConfiguration</td><td>Enable/disable MRUM sampling</td><td><code>false</code></td></tr><tr><td><code>redisSampledSessionCacheConfig</code></td><td>CollectorConfiguration</td><td>Redis connection config</td><td><code>null</code></td></tr><tr><td><code>sessionBasedSamplingConfigPath</code></td><td>CollectorConfiguration</td><td>Path to Lua script</td><td><code>../../sampled-session-redis-script.lua</code></td></tr></tbody></table></div>
+<hr>
+<h2 id="16-interview-q-and-a"><a class="anchor" href="#16-interview-q-and-a">#</a>16. Interview Q and A</h2>
+<h3 id="q-why-did-you-sample-sessions-instead-of-individual-browser-beacons"><a class="anchor" href="#q-why-did-you-sample-sessions-instead-of-individual-browser-beacons">#</a>Q: Why did you sample sessions instead of individual browser beacons?</h3>
+<p>A browser session is the meaningful analytical unit in BRUM. If you sample individual beacons independently, you can keep some page-view events while dropping related AJAX calls, resources, or follow-up interactions. That breaks session integrity and distorts user-behavior analytics.</p>
+<p>Session-based sampling preserves the coherence of the user journey. Either the whole session is accepted or the whole session is rejected, which keeps metrics and investigations meaningful.</p>
+<h3 id="q-why-couldnt-you-use-an-in-memory-map-in-collector"><a class="anchor" href="#q-why-couldnt-you-use-an-in-memory-map-in-collector">#</a>Q: Why couldn't you use an in-memory map in collector?</h3>
+<p>Collector runs as multiple stateless pods. The same user's events can reach different pods. A local cache only knows about events seen by that particular pod. Two pods could each independently create <code>session_12345</code>, resulting in duplicate session records and inconsistent sampling decisions.</p>
+<p>Redis solves this by acting as a shared, centralized coordination layer that every collector pod queries and updates.</p>
+<h3 id="q-why-lua-script-over-redlock"><a class="anchor" href="#q-why-lua-script-over-redlock">#</a>Q: Why Lua script over Redlock?</h3>
+<p>The collector path is latency-sensitive. Redlock requires multiple calls: acquire lock, read/update session data, release lock. Lua lets Redis execute the entire decision path atomically in one server-side script. That means fewer network round trips, lower latency, and simpler control flow.</p>
+<p>We achieved the same atomicity goal with better performance characteristics for our workload.</p>
+<h3 id="q-how-did-you-handle-the-race-condition-exactly"><a class="anchor" href="#q-how-did-you-handle-the-race-condition-exactly">#</a>Q: How did you handle the race condition exactly?</h3>
+<p>Lua scripts run atomically inside Redis. No other command can execute while a Lua script is running. So even if two collectors submit near-simultaneous requests for the same session key, Redis serializes execution. The first script invocation creates/updates the session, and the second sees the updated state rather than racing on stale reads.</p>
+<p>This eliminated the duplicate-session creation issue that occurred when multiple collectors independently tried to create the same session.</p>
+<h3 id="q-what-happens-if-redis-goes-down"><a class="anchor" href="#q-what-happens-if-redis-goes-down">#</a>Q: What happens if Redis goes down?</h3>
+<p>The design includes fallback local processing so collectors can continue ingesting traffic rather than blocking or losing data. This prioritizes availability in a front-door ingestion service.</p>
+<p>Perfect global sampling consistency may be temporarily reduced during a Redis outage, but the system continues operating and switches back to Redis when connectivity is restored.</p>
+<h3 id="q-how-does-the-algorithm-stay-near-the-target-sampling-percentage"><a class="anchor" href="#q-how-does-the-algorithm-stay-near-the-target-sampling-percentage">#</a>Q: How does the algorithm stay near the target sampling percentage?</h3>
+<p>The Lua script maintains per-app counters in Redis: total sessions seen and accepted sessions. For each new session, it computes <code>accepted / total * 100</code> and compares with the target.</p>
+<ul><li>Below target: accept more sessions</li><li>Above target: reject more sessions</li><li>Exactly at target: randomized decision to avoid deterministic bias</li></ul>
+<p>This creates a self-correcting feedback loop rather than a naive one-time random decision. Over time the system converges on the configured target percentage.</p>
+<h3 id="q-why-is-ttl-important-here"><a class="anchor" href="#q-why-is-ttl-important-here">#</a>Q: Why is TTL important here?</h3>
+<p>Redis is serving as a live coordination cache, not a permanent session history. Sessions that become inactive should disappear automatically. TTL prevents memory bloat and eliminates the need for a separate cleanup process. It aligns key lifetime with the session's natural lifetime.</p>
+<h3 id="q-what-was-the-hardest-design-decision"><a class="anchor" href="#q-what-was-the-hardest-design-decision">#</a>Q: What was the hardest design decision?</h3>
+<p>Deciding how to resolve the distributed race condition without adding too much latency to the collector hot path. That decision directly affected correctness, performance, and production safety.</p>
+<p>Evaluating Redlock versus Lua scripting was the key tradeoff. Lua was chosen because it preserved atomicity while avoiding the multiple extra Redis API calls that Redlock would require at scale.</p>
+<h3 id="q-what-is-the-session-continuity-logic"><a class="anchor" href="#q-what-is-the-session-continuity-logic">#</a>Q: What is the session continuity logic?</h3>
+<p>When a beacon arrives for an existing session key, the Lua script checks for time overlap:</p>
+<pre><code class="language-">new_end &gt;= stored_start - timeout  AND  new_start &lt;= stored_end + timeout</code></pre>
+<p>If this overlap condition holds, the new event is treated as part of the existing session. The script updates the session's start and end boundaries (taking the earliest start and latest end) and refreshes the TTL. The original sampling decision is returned unchanged — ensuring consistency for all events in that session.</p>
+<p>If the time ranges do not overlap (a straggler from a completely different time period), the session is treated as a new session and goes through the full sampling decision.</p>
+<h3 id="q-what-happens-if-the-first-session-for-a-new-app-arrives"><a class="anchor" href="#q-what-happens-if-the-first-session-for-a-new-app-arrives">#</a>Q: What happens if the first session for a new app arrives?</h3>
+<p>The first session is always accepted. This is the bootstrap case. The script detects <code>total_sessions_count = 0</code>, sets counters to <code>(total=1, accepted=1)</code>, stores the target sampling percentage, and marks the session as accepted. This prevents a cold-start rejection where the very first session could be dropped before any ratio exists.</p>
+<h3 id="q-how-does-sampling-for-mrum-differ-from-brum"><a class="anchor" href="#q-how-does-sampling-for-mrum-differ-from-brum">#</a>Q: How does sampling for MRUM differ from BRUM?</h3>
+<p>The underlying algorithm is the same — same Redis key structure, same Lua script logic, same per-app counters and self-correcting behavior. The difference is that <code>MrumSampler.sampleMobileRecord()</code> extracts session information from a mobile beacon format (iOS/Android SDK) rather than a browser beacon format. The feature flag is <code>mrumSamplingEnabled</code> (separate from <code>sessionBasedSamplingEnabled</code> for BRUM).</p>
+<h3 id="q-what-exactly-is-stored-in-redis-and-why"><a class="anchor" href="#q-what-exactly-is-stored-in-redis-and-why">#</a>Q: What exactly is stored in Redis and why?</h3>
+<p>Four key types per <code>appKey</code>: (1) the session JSON object per active <code>sessionId</code> holding time boundaries and sampling decision, (2) a total sessions counter, (3) an accepted sessions counter, and (4) the target sampling percentage. The counter pair drives the self-correcting algorithm. The session object enables session continuity — once a decision is made, every subsequent beacon for that session reads and returns the same status without recalculating.</p>
+<h3 id="q-why-is-samplingstatus-stored-as-a-string-rather-than-a-json-boolean"><a class="anchor" href="#q-why-is-samplingstatus-stored-as-a-string-rather-than-a-json-boolean">#</a>Q: Why is <code>samplingStatus</code> stored as a string rather than a JSON boolean?</h3>
+<p>Redis JSON module interop with Lua returns values as strings. Storing <code>&quot;true&quot;</code> and <code>&quot;false&quot;</code> as string values avoids type coercion issues when reading back from Redis via <code>JSON.GET</code> inside Lua and when parsing the return value back in Java via Jedis.</p>
+<hr>
+<h2 id="17-one-liners-and-soundbites"><a class="anchor" href="#17-one-liners-and-soundbites">#</a>17. One-Liners and Soundbites</h2>
+<div class="table-wrap"><table><thead><tr><th>Context</th><th>What to Say</th></tr></thead><tbody><tr><td>Opening summary</td><td>&quot;I built a Redis + Lua based session-sampling layer in collector so we could reduce BRUM license usage without breaking session integrity across distributed pods.&quot;</td></tr><tr><td>Distributed systems angle</td><td>&quot;The core challenge was distributed race conditions — the same user session could hit different collectors at the same time.&quot;</td></tr><tr><td>Design choice</td><td>&quot;I chose Lua over Redlock because it gave us atomicity with one Redis call instead of several network round trips.&quot;</td></tr><tr><td>Impact framing</td><td>&quot;The value was not just saving licenses — it was saving them early in collector before unsampled sessions consumed downstream compute and queue bandwidth.&quot;</td></tr><tr><td>Ownership statement</td><td>&quot;My contribution was the distributed coordination and sampling decision layer: Redis data model, Jedis integration, Lua workflow, TTL strategy, and failure-mode handling.&quot;</td></tr><tr><td>Self-correcting algorithm</td><td>&quot;The algorithm is self-correcting — it continuously steers itself toward the configured target percentage rather than making a one-time random coin-flip per session.&quot;</td></tr><tr><td>Session coherence</td><td>&quot;Either the whole session is sampled or the whole session is dropped. That is what preserves the integrity of user-session level analytics.&quot;</td></tr><tr><td>Schema design</td><td>&quot;The session object stores exactly three fields: start time, end time, and sampling status. Every field earns its place — start and end enable the continuity check, status enables the coherence guarantee.&quot;</td></tr></tbody></table></div>
+<hr>
+<h2 id="18-tech-stack"><a class="anchor" href="#18-tech-stack">#</a>18. Tech Stack</h2>
+<div class="table-wrap"><table><thead><tr><th>Category</th><th>Technologies</th></tr></thead><tbody><tr><td>Languages</td><td>Java, Lua</td></tr><tr><td>Core Infrastructure</td><td>Redis, Jedis, collector pods (horizontal scaling)</td></tr><tr><td>Java Client</td><td>Jedis connection pool, <code>evalsha</code> for Lua pre-loading</td></tr><tr><td>EUM Platform Concepts</td><td>BRUM, browser beacons, BeaconProcessor, BrowserRecord, sessionizer, Kinesis, SQS</td></tr><tr><td>Distributed Systems</td><td>Race conditions, atomic Lua execution, stateless pods, centralized session coordination, fallback mode</td></tr><tr><td>Performance Concepts</td><td>Connection pooling, timeouts, single round-trip decisions, TTL-based cleanup, hot-path ingestion</td></tr><tr><td>Operational Concepts</td><td>Feature flags, resilience, local fallback, scalability, latency-sensitive hot path</td></tr><tr><td>EUM Downstream</td><td>L1/L2 Metrics Store, Event Grouper, Crash Grouper, Sessionizer, Decorator, xlb, API Server</td></tr></tbody></table></div>
+<hr>
+<h2 id="19-final-prep-checklist"><a class="anchor" href="#19-final-prep-checklist">#</a>19. Final Prep Checklist</h2>
+<p>Before walking into the interview, verify you can answer each of these without notes:</p>
+<ul><li>☐ Can explain what EUM is and the full EUM Cloud pipeline top to bottom</li><li>☐ Can explain where Collector sits in the EUM ingestion flow</li><li>☐ Can explain why session-based sampling is better than beacon-level sampling</li><li>☐ Can explain the distributed race condition and why multiple pods cause it</li><li>☐ Can explain why a local in-memory cache is insufficient</li><li>☐ Can defend Lua over Redlock with latency and round-trip reasoning</li><li>☐ Can name all 4 Redis key types, their patterns, and what each stores</li><li>☐ Can describe the 3-field session JSON schema and explain why each field exists</li><li>☐ Can explain the TTL formula and why the timeout component is added</li><li>☐ Can walk through all 5 sampling scenarios (cold start, under target, over target, at target, existing session)</li><li>☐ Can explain the session continuity / time-overlap logic</li><li>☐ Can explain the TTL strategy and why it is preferred over explicit cleanup</li><li>☐ Can explain what happens during Redis downtime and why that tradeoff is correct</li><li>☐ Can quantify the ~60% license reduction and explain how it was achieved</li><li>☐ Can articulate exactly what your contribution was vs what already existed</li><li>☐ Can explain why <code>samplingStatus</code> is immutable after first write</li><li>☐ Can describe the self-correcting counter behavior across all 3 decision branches</li></ul>
+<hr>
+<p><em>Last updated: 2026 | Project: EUM BRUM Session Sampling | Author: Abhishek Goyal</em></p>
+  </article>
+
+  <section id="verbatim-source" class="section-card source-appendix">
+    <h2 class="section-title">Full Markdown Source</h2>
+    <p class="lead">This appendix intentionally includes the complete Markdown verbatim so every source detail remains present in the HTML deliverable.</p>
+    <pre><code># BRUM Session Sampling — Redis + Jedis + Lua
+### End-to-End Technical Reference for Interview Preparation
+
+&gt; **Role:** Software Engineer II — EUM Collector Platform  
+&gt; **Scope:** Distributed session-based sampling for Browser Real User Monitoring (BRUM)  
+&gt; **Stack:** Java · Redis · Jedis · Lua · Kinesis · SQS · Spring Boot  
+&gt; **Impact:** ~60% reduction in EUM license consumption without breaking session integrity
+
+---
+
+## Table of Contents
+
+1. [What is EUM? — Big Picture First](#1-what-is-eum--big-picture-first)
+2. [EUM Cloud Architecture — Component Walkthrough](#2-eum-cloud-architecture--component-walkthrough)
+3. [The Problem This Project Solved](#3-the-problem-this-project-solved)
+4. [Elevator Pitch](#4-elevator-pitch)
+5. [Your Exact Contribution](#5-your-exact-contribution)
+6. [Architecture and Flow](#6-architecture-and-flow)
+7. [Redis Data Model — Complete Reference](#7-redis-data-model--complete-reference)
+8. [Session Object Schema — Full Specification](#8-session-object-schema--full-specification)
+9. [Lua Script — Atomic Session Decision](#9-lua-script--atomic-session-decision)
+10. [Sampling Algorithm — 5 Scenarios](#10-sampling-algorithm--5-scenarios)
+11. [Where This Fits in Collector Flow](#11-where-this-fits-in-collector-flow)
+12. [Design Decisions and Tradeoffs](#12-design-decisions-and-tradeoffs)
+13. [Impact and Metrics](#13-impact-and-metrics)
+14. [Core Components Reference](#14-core-components-reference)
+15. [Configuration Properties](#15-configuration-properties)
+16. [Interview Q and A](#16-interview-q-and-a)
+17. [One-Liners and Soundbites](#17-one-liners-and-soundbites)
+18. [Tech Stack](#18-tech-stack)
+19. [Final Prep Checklist](#19-final-prep-checklist)
+
+---
+
+## 1. What is EUM? — Big Picture First
+
+**EUM = End User Monitoring.** It is the observability platform that captures and analyzes real user interactions with web and mobile applications.
+
+EUM covers three major product areas:
+
+| Product | Acronym | What it monitors |
+|---------|---------|-----------------|
+| Browser Real User Monitoring | BRUM | Web browser sessions, page views, AJAX calls, JS errors, resource timings |
+| Mobile Real User Monitoring | MRUM | iOS and Android app sessions, crashes, network calls |
+| Synthetic Monitoring | SRUM | Scripted test agents that simulate user paths |
+
+The EUM Cloud is the centralized processing system that ingests, processes, stores, and exposes all of this data. It is the system you need to explain before walking into your project contribution.
+
+---
+
+## 2. EUM Cloud Architecture — Component Walkthrough
+
+![EUM Cloud HLD Diagram](eum_cloud_hld_interactive.svg)
+
+### 2.1 How EUM Ingestion Works — Layer by Layer
+
+When you open this conversation with an interviewer, walk them through the following layers top to bottom. This establishes the full context before you zoom into your project.
+
+```
+Agents/Users
+    Browser Agents (JS agent)
+    Mobile Agents (iOS/Android SDK)
+    IoT Agents
+    Synth Agents / Schedulers
+    ThousandEye Server
+        |
+        v
+AWS Load Balancers / ALBs
+    Collector-proxy ALB      &lt;-- BRUM, IoT, Synth agent traffic
+    EUM-proxy ALB            &lt;-- BRUM + MRUM traffic
+    TE-Collector ALB         &lt;-- ThousandEye traffic
+        |
+        v
+Envoy Proxy Tiers
+    collector-proxy          &lt;-- routes to Collector pods
+    eum-proxy                &lt;-- routes to Collector pods
+    col-proxy-ctrl           &lt;-- control plane config
+        |
+        v
+EUM Cloud (EUM Collector Pods)
+    Collector    &lt;-- BRUM beacon ingestion
+    IoT Collector
+    Synth Collector
+        |
+        v
+Metrics Pipeline
+    L1 Metrics Store (primary)
+    L2 Metrics Store (aggregated)
+    Secondary Store
+        |
+        v
+Parallel Processing Pipelines
+    Event Pipeline:     Event Symbolicator -&gt; Event Grouper -&gt; Event Group Store
+    Crash Pipeline:     Crash Symbolicator -&gt; Crash Grouper -&gt; Crash Group Store
+    Session Pipeline:   Sessionizer -&gt; Decorator -&gt; EuM Custom View Store
+    JS Error Pipeline:  JS Error Grouper -&gt; JS Error Stacktrace Store
+        |
+        v
+Serving Layer
+    xlb (load balancer)
+    API Server
+    Screenshot Service
+    User Journey Query Service
+    BRUM Error Service
+        |
+        v
+License Portal / Controller (EuM Custom Label Store, S3 snapshots)
+
+```
+
+### 2. Beacon Data — Where Does It Go?
+## A browser beacon is an HTTP POST with a binary or JSON payload. Here is its lifecycle:
+
+```
+Step 1: Browser JS agent sends HTTP POST beacon
+        Payload example:
+        {
+          &quot;sessionId&quot;:   &quot;sess_abc123&quot;,
+          &quot;appKey&quot;:      &quot;EX-AAA-AUM&quot;,
+          &quot;startTime&quot;:   1698765432100,
+          &quot;endTime&quot;:     1698765445200,
+          &quot;pageUrl&quot;:     &quot;https://example.com/checkout&quot;,
+          &quot;ajaxCalls&quot;:   [...],
+          &quot;jsErrors&quot;:    [...],
+          &quot;resourceTimings&quot;: [...]
+        }
+
+Step 2: HTTP Servlet in Collector receives it
+        → Calls BeaconProcessor.processBeacon(rawBytes)
+
+Step 3: BeaconProcessor parses raw bytes → BrowserRecord Java object
+        BrowserRecord {
+          sessionId:   &quot;sess_abc123&quot;
+          appKey:      &quot;EX-AAA-AUM&quot;
+          startTimeMs: 1698765432100
+          endTimeMs:   1698765445200
+          ...other fields
+        }
+        ↑ This object lives on JVM heap. It is NOT written to disk or DB.
+
+Step 4: BrumSampler.sampleBrowserRecord(record) is called
+        → Reads/writes ONLY to Redis (my project)
+        → Returns true (accept) or false (drop)
+
+Step 5a: If ACCEPTED → push BrowserRecord to Kinesis stream
+         → downstream Sessionizer picks it up
+         → eventually lands in EuM Custom View Store
+
+Step 5b: If REJECTED → record is discarded from memory
+         → reportUnsampledBeaconCount() called
+         → nothing written anywhere (beacon is dropped)
+Beacon data itself is never persisted by Collector. It is either forwarded downstream or dropped.
+```
+
+### 3. Record Data — Where Does It Live?
+## A BrowserRecord is a Java object on the heap. Here is what it looks like structurally:
+
+```
+// Conceptual structure of BrowserRecord
+class BrowserRecord {
+    String  sessionId;          // &quot;sess_abc123&quot;
+    String  appKey;             // &quot;EX-AAA-AUM&quot;
+    long    startTimeMs;        // 1698765432100
+    long    endTimeMs;          // 1698765445200
+    String  pageUrl;
+    String  agentId;
+    List&lt;AjaxRecord&gt;   ajaxCalls;
+    List&lt;ErrorRecord&gt;  jsErrors;
+    // ... other EUM-specific fields
+}
+```
+It is NOT written to a database by the collector. The Collector's job is:
+
+Parse the beacon into a record
+Validate it
+Make the sampling decision
+Either forward it downstream (Kinesis) or drop it
+The persistence responsibility belongs to the Sessionizer and downstream stores.
+
+To provide a complete picture of the ingestion flow, we need to look at the Edge-of-the-Edge: the Content Delivery Network (CDN).
+
+In the EUM Cloud architecture, the flow doesn't start at the ALB; it starts with the global distribution of the monitoring code itself.
+
+### 1. The Global Distribution: JS Agents on the CDN
+Before a single metric is captured, the Browser Agent (JS agent) must be loaded into the user's browser.
+
+Regional Deployment: The JS agent is hosted on CDNs (like CloudFront or Akamai) across multiple global regions. This ensures that when a user in London or Tokyo opens a monitored website, the agent script is fetched from a nearby &quot;Edge Location&quot; rather than a central server, minimizing page load impact.
+
+Version Management: CDNs allow for &quot;staged rollouts&quot; of agent updates. Different regions can host different versions of the agent, allowing for canary testing of new collection features.
+
+### 2. Data Collection: The Beacon API
+Once the agent is running in the user's browser, it hooks into the Beacon API and other browser performance interfaces.
+
+The &quot;Collection&quot; Phase: The agent gathers page load timings, AJAX calls, and JS errors. It packages this into a binary or JSON payload known as a &quot;Beacon.&quot;
+
+The Transmission Phase: Instead of sending data back to the CDN (which is primarily for delivering content), the agent sends an HTTP POST request directly to the EUM Cloud Ingress.
+
+## 3. The Full Theoretical Path (Revised)
+Integrating your points, the end-to-end flow looks like this:
+
+## Phase A: Deployment &amp; Delivery
+CDN Tier: Hosts the JS agent scripts globally.
+
+User Browser: Downloads the agent from the nearest CDN edge.
+
+## Phase B: Collection &amp; Egress
+JS Agent: Executes in the browser, collecting performance data.
+
+Beacon POST: The agent &quot;phones home&quot; by sending the collected data to the EUM Cloud.
+
+## Phase C: Ingress &amp; Processing
+AWS ALB: Receives the beacon. It performs regional load balancing and SSL termination.
+
+- Envoy Proxy: Performs intelligent routing, header-based segregation, and circuit breaking.
+
+- EUM Collector: Receives the beacon, where your distributed session sampling logic decides whether to keep or drop the data based on the app's license configuration.
+
+## Why this matters for the Platform
+By separating the Agent Delivery (CDN) from the Data Ingestion (ALB/Envoy), the system achieves massive scale:
+
+The CDN handles the high-bandwidth task of serving static JS files.
+
+The EUM Cloud focuses purely on the high-throughput, compute-heavy task of processing millions of incoming data points.
+
+
+This specific layer of the [EUM Cloud architecture](https://github.com/abhishekgoyal17/Level_up/blob/main/01_EUM_session_sampling.md) represents the **Edge Ingress and Routing Tier**. It is designed to handle massive, heterogeneous traffic from millions of global agents while ensuring high availability and intelligent routing.
+
+The transition from **AWS ALBs** to **Envoy Proxy Tiers** is a classic &quot;Two-Tiered Ingress&quot; strategy. Here is the theoretical breakdown of how these components work together:
+
+---
+
+### Data Flow: 
+
+```text
++---------------+------------------+-----------------------------------------------------------------------------+
+| Stage         | Component        | Action                                                                      |
++---------------+------------------+-----------------------------------------------------------------------------+
+| Delivery      | CDN              | Browser downloads the JS agent (e.g., from cdn.appdynamics.com).            |
++---------------+------------------+-----------------------------------------------------------------------------+
+| Collection    | JS Agent         | Agent gathers page load, AJAX, and JS error data from the browser.          |
++---------------+------------------+-----------------------------------------------------------------------------+
+| Ingestion     | EUM Collector    | Data is sent to a regional AWS-hosted collector (e.g., fra-col.example.com).|
++---------------+------------------+-----------------------------------------------------------------------------+
+| Aggregation   | EUM Cloud        | Regional data is aggregated into the centralized EUM Cloud.                 |
++---------------+------------------+-----------------------------------------------------------------------------+
+| Visualization | Controller       | The Controller downloads aggregated data every minute for UI display.       |
++---------------+------------------+-----------------------------------------------------------------------------+
+
+```
+
+
+## 1. The Entry Point: AWS Application Load Balancers (ALB)
+
+The ALB is the &quot;External Facing&quot; tier. Its primary job is **Layer 7 (HTTP/HTTPS) termination** and initial traffic segregation.
+
+* **Traffic Segregation:** By using different ALBs for different traffic types (BRUM vs. MRUM vs. ThousandEye), the system achieves **fault isolation**. If the `Collector-proxy ALB` is overwhelmed by a spike in Browser traffic, the `TE-Collector ALB` remains unaffected, ensuring ThousandEye monitoring persists.
+* **SSL/TLS Termination:** The ALBs handle the compute-heavy process of decrypting HTTPS traffic from the public internet. This offloads CPU cycles from the internal pods.
+* **Scalability:** ALBs are managed services that scale automatically to handle throughput spikes. They act as the &quot;shock absorbers&quot; for the EUM cloud.
+
+---
+
+## 2. The Intelligence Layer: Envoy Proxy Tiers
+
+Once the ALB accepts a request, it passes it to **Envoy**, a high-performance C++ distributed proxy. While the ALB is great at basic load balancing, Envoy provides the **fine-grained control** needed for a complex microservices environment.
+
+### A. collector-proxy vs. eum-proxy
+
+These are functional Envoy instances that act as **Service Proxies**.
+
+* **Header-Based Routing:** Envoy can look at specific HTTP headers or paths to decide exactly which version of a Collector pod should handle the request.
+* **Retries and Timeouts:** Envoy manages the &quot;Resilience Logic.&quot; If a Collector pod is momentarily slow, Envoy can automatically retry the request to a different pod before the user's browser agent times out.
+* **Circuit Breaking:** If a cluster of Collector pods starts failing, Envoy &quot;trips the circuit&quot; to stop sending traffic to them, preventing a cascading failure across the entire EUM cloud.
+
+### B. col-proxy-ctrl (The Control Plane)
+
+This is the most critical theoretical component for a distributed system.
+
+* **xDS APIs:** In a modern architecture, you don't manually edit config files on 100 different proxies. Instead, Envoy uses a **Control Plane** (like Istio or a custom implementation) to discover its configuration.
+* **Dynamic Updates:** `col-proxy-ctrl` tells the proxies about new Collector pods as they spin up (Service Discovery). It allows the system to update routing rules in real-time without restarting the proxies.
+
+---
+
+## 3. Why Have Both? (The Theory of &quot;Proxy-in-Proxy&quot;)
+
+You might wonder why we don't go straight from ALB to the Collector pods. The &quot;Envoy Tier&quot; adds several &quot;Day 2&quot; operational benefits:
+
+1. **Observability:** Envoy generates incredibly detailed metrics (success rates, latencies per route, 4xx/5xx counts) that the AWS ALB does not provide at the same level of granularity.
+2. **Protocol Translation:** The ALB might receive HTTP/2 from a modern browser, and Envoy can translate that to optimized gRPC or standard HTTP/1.1 for the internal Collector pods.
+3. **Security (mTLS):** While the ALB handles the public certificate, the Envoy tier can handle **Internal Mutual TLS**, ensuring that even if an attacker gets inside the VPC, they cannot spoof traffic between the proxy and the Collector pods.
+
+---
+
+### Summary of Traffic Flow
+
+1. **Agent** (e.g., a JS Browser Agent) sends a &quot;Beacon.&quot;
+2. **AWS ALB** receives the HTTPS request, decrypts it, and identifies it as `BRUM` traffic.
+3. **Envoy (`collector-proxy`)** receives the request from the ALB. It checks the health of the Collector fleet and applies any specific routing rules (like &quot;Canary&quot; routing for a new feature).
+4. **Collector Pod** finally receives the validated, decrypted, and routed request to begin the [Session Sampling logic](https://github.com/abhishekgoyal17/Level_up/blob/main/01_EUM_session_sampling.md#6-architecture-and-flow).
+
+### 2.2 Key Platform Concepts for Interview
+
+**Beacon** — The raw payload that an agent sends to the collector. Browser agents send HTTP POST beacons containing page load timing, AJAX results, JS errors, etc. Mobile agents send equivalent mobile-SDK beacons.
+
+**Collector** — The front-door service in EUM Cloud that receives beacons, validates them, and converts them to internal record types. This is where your project lives.
+
+**BeaconProcessor** — The processing component inside collector that parses beacon bytes into typed records (`BrowserRecord`, `MobileRecord`, etc.) and routes them through the validation and sampling pipeline.
+
+**Sessionizer** — A dedicated downstream service that groups individual events/beacons into user sessions. It uses Kinesis stream partitioning by `agentId` to guarantee all events from the same session arrive at the same Kinesis consumer. This is fundamentally different from how collector works — collector is stateless across pods.
+
+**Decorator** — Enriches session records with customer-configured labels and metadata before they are stored in the EuM Custom View Store.
+
+**AccountBeaconReporter** — Reports valid-beacon counts and unsampled-beacon counts per app. This is what drives the EUM license consumption metrics.
+
+---
+
+## 3. The Problem This Project Solved
+
+### 3.1 Business Problem
+
+EUM customers pay for license units based on sessions processed. Many customers had no way to control how many sessions were being processed — every user session was ingested and counted toward their license. The requirement was to build **session-based sampling** so customers could set a target sampling percentage (e.g., 25%) and only process that fraction of their browser sessions.
+
+### 3.2 Technical Challenge — Why This Is Hard
+
+Sampling sounds simple: flip a coin, decide yes or no. But three constraints make it genuinely hard in the EUM context:
+
+**Constraint 1 — Session coherence.** The sampling unit must be a session, not an individual beacon. If you randomly sample individual beacons, you can keep a user's page-view event while dropping their related AJAX call and error event. That destroys session-level analysis. The entire session must be either fully sampled or fully dropped.
+
+**Constraint 2 — Distributed pods.** Collector runs as multiple stateless pods behind a load balancer. There is no guarantee that two beacons from the same user session hit the same pod. If both pods independently decide whether to create a session, you get race conditions where two pods each think they are creating a brand new session for the same user — leading to duplicate sessions, inconsistent sampling decisions, and wrong license accounting.
+
+**Constraint 3 — Latency.** Collector is a hot-path ingestion service handling millions of beacons per minute. Any distributed coordination must add minimal latency. Complex locking strategies that require multiple network round-trips are not acceptable.
+
+### 3.3 Why You Cannot Just Use Local Cache
+
+The intuitive solution is to keep an in-memory map in each collector pod. Pod receives a beacon, checks the map, decides accept or reject.
+
+This fails because the same session can hit different pods. Pod A creates session `sess_12345` in its local map and accepts it. Moments later, Pod B receives another beacon from the same session but does not know about `sess_12345`. Pod B creates it again and also accepts it — you now have the same session counted twice.
+
+You need a centralized, shared state store that all pods can coordinate through.
+
+---
+
+## 4. Elevator Pitch
+
+### 30-Second Version
+
+&gt; &quot;In our BRUM pipeline, multiple collector pods process millions of browser beacons per minute. We wanted customers to control EUM license usage through session-based sampling, but sampling had to be consistent across distributed collectors — otherwise the same user session could be duplicated or partially dropped. I designed and implemented a Redis + Jedis + Lua based session sampling layer in collector. Redis acted as the centralized session store, Jedis handled low-latency pooled connectivity, and Lua scripts gave us atomic session create/update decisions in a single Redis call. That let us reduce license usage by about 60% while avoiding duplicate session creation and preserving session integrity.&quot;
+
+### 2-Minute Version
+
+Our EUM Browser Real User Monitoring system ingests massive browser traffic through distributed collector pods. Each beacon eventually contributes to metrics, event pipelines, and downstream sessionization. The business requirement was to give customers a way to save license consumption by sampling browser sessions rather than processing every single session.
+
+The tricky part was that sampling had to happen **early in collector** so we could save compute, memory, queue traffic, and license consumption downstream. But collector is distributed — the same user's events can hit different pods. If every collector independently decides whether to create or sample a session, you get race conditions and inconsistent behavior.
+
+My solution was to introduce a small distributed session layer in collector using Redis. Each collector uses Jedis to query and update Redis. The actual decision logic — whether this is a new session, an update to an existing session, a straggler, and whether it should be sampled — runs inside Redis through a Lua script. That gave us atomicity without introducing the multiple network round trips of distributed locking approaches like Redlock.
+
+Sessions are stored with TTL so stale state is auto-cleaned. If Redis becomes unavailable, collectors can temporarily fall back to local processing so traffic continues flowing. Overall, this gave us consistent distributed sampling, lower latency, better license efficiency, and safer behavior at production scale.
+
+---
+
+## 5. Your Exact Contribution
+
+&gt; The EUM collector and sessionizer pipeline already existed. My contribution was building the **distributed session-based sampling layer inside collector** using Redis, Jedis, and Lua.
+
+| What I built | Detail |
+|---|---|
+| Distributed Session Cache Design | Introduced Redis as a centralized session store so sampling stays consistent across multiple collector pods |
+| Jedis Integration | Integrated Redis access into Java collectors using pooled Jedis connections with timeouts suitable for high-throughput production traffic |
+| Lua-based Atomic Sampling | Implemented the core create/update/sample workflow as a Lua script inside Redis to resolve race conditions with a single Redis call |
+| Session TTL Strategy | Defined TTL-based automatic cleanup so stale sessions do not bloat Redis memory |
+| Fallback Design | Added resilience so collectors can continue local processing if Redis is temporarily unavailable |
+| Sampling Algorithm Design | Built session-level sampling logic with per-app counters and self-correcting behavior |
+
+---
+
+## 6. Architecture and Flow
+
+### 6.1 High-Level Flow
+
+```
+Browser/Mobile Client
+        |
+        | HTTP beacon
+        v
+HTTP Servlet (collector)
+        |
+        v
+BeaconProcessor.processBeacon()
+        |
+        | parse beacon -&gt; records
+        | validate record
+        v
+Sampling Decision Engine
+        |
+        |--[Browser Record + sessionBasedSamplingEnabled=true]
+        |           |
+        |           v
+        |       BrumSampler.sampleBrowserRecord()
+        |           |
+        |       extract: appKey, sessionId, startTime, endTime
+        |           |
+        |       Execute Lua Script via Jedis
+        |           |
+        |           v
+        |       Redis Session Cache (sampled-session-redis-script.lua)
+        |           |
+        |           | returns: samplingStatus (true/false)
+        |           v
+        |       Sample Accepted?
+        |         YES: acceptBeaconForProcessing(record)
+        |              reportValidBeaconCount(record)
+        |              --&gt; RecordProcessor --&gt; Downstream
+        |         NO:  reportUnsampled(record)
+        |              record is dropped
+        |
+        |--[Mobile Record + mrumSamplingEnabled=true]
+        |           v
+        |       MrumSampler.sampleMobileRecord()
+        |           | (same flow as BRUM)
+        |
+        |--[Other Records]
+                    v
+                No sampling, pass through directly
+```
+
+### 6.2 Inside the Redis Session Decision
+
+When BrumSampler calls Redis via the Lua script, the following happens atomically in a single round-trip:
+
+```
+Input: KEYS[1..4] + ARGV[1..5]
+    KEYS[1] = sampled_session:{appKey}:{sessionId}
+    KEYS[2] = total_sessions_count:{appKey}
+    KEYS[3] = accepted_sessions_count:{appKey}
+    KEYS[4] = sampling_percentage:{appKey}
+    ARGV[1] = session JSON (startTimeMs, endTimeMs, samplingStatus=false)
+    ARGV[2] = startTimeMs
+    ARGV[3] = endTimeMs
+    ARGV[4] = timeoutMs
+    ARGV[5] = targetSamplingPercentage
+
+Decision flow inside Lua:
+    if session key exists:
+        if event time overlaps existing session window (with timeout):
+            update session boundaries (min start, max end)
+            refresh TTL
+            return existing samplingStatus   &lt;-- session continuity
+        else:
+            treat as new session (straggler replaces old session)
+    else:
+        if very first session for this app:
+            always ACCEPT (bootstrap)
+            init counters (total=1, accepted=1)
+        else:
+            current_pct = accepted_sessions / total_sessions * 100
+            if current_pct &lt; target_pct:  ACCEPT (incr both counters)
+            if current_pct &gt; target_pct:  REJECT (incr total only)
+            if current_pct == target_pct: RANDOM (math.random(1..100) &lt;= target?)
+        
+        set samplingStatus in session JSON
+        set TTL = 600s + timeoutMs/1000
+        return samplingStatus
+```
+
+### 6.3 Sampling Decision Engine — Object Model
+
+The Sampling Decision Engine is triggered inside `BeaconProcessor` and classifies incoming records:
+
+| Record Type | Condition | Sampler Invoked |
+|---|---|---|
+| `BrowserRecord` | `sessionBasedSamplingEnabled = true` | `BrumSampler.sampleBrowserRecord()` |
+| `MobileRecord` | `mrumSamplingEnabled = true` | `MrumSampler.sampleMobileRecord()` |
+| Other (`ARecord`, etc.) | `samplingRequired = false` | Bypasses sampling entirely |
+
+---
+
+## 7. Redis Data Model — Complete Reference
+
+This section is the comprehensive reference for everything stored in Redis as part of session-based sampling. All keys are namespaced per `appKey` to ensure complete isolation between applications sharing the same Redis instance.
+
+### 7.1 Key Naming Convention
+
+```
+Pattern:   {key_type}:{appKey}[:{sessionId}]
+Separator: colon (:)
+Scope:     All 4 keys are scoped per appKey
+           Session key additionally scoped per sessionId
+```
+
+### 7.2 Complete Key Inventory
+
+```
+Key 1 — Session Data Key (per session):
+  Pattern:  sampled_session:{appKey}:{sessionId}
+  Example:  sampled_session:EX-AAA-AUM:session_12345
+  Type:     JSON (Redis JSON / ReJSON module)
+  Purpose:  Stores session time boundaries + sampling decision
+  TTL:      600s + (timeoutMillis / 1000)  →  auto-expires
+
+Key 2 — Total Sessions Counter (per app):
+  Pattern:  total_sessions_count:{appKey}
+  Example:  total_sessions_count:EX-AAA-AUM
+  Type:     Integer (Redis String, numeric)
+  Purpose:  Running count of ALL sessions seen for this app (sampled + dropped)
+  TTL:      None (persistent counter)
+  Incremented by: Every new session creation
+
+Key 3 — Accepted Sessions Counter (per app):
+  Pattern:  accepted_sessions_count:{appKey}
+  Example:  accepted_sessions_count:EX-AAA-AUM
+  Type:     Integer (Redis String, numeric)
+  Purpose:  Running count of only ACCEPTED sessions for this app
+  TTL:      None (persistent counter)
+  Incremented by: Only accepted new sessions
+
+Key 4 — Sampling Percentage (per app):
+  Pattern:  sampling_percentage:{appKey}
+  Example:  sampling_percentage:EX-AAA-AUM
+  Type:     Integer (Redis String, numeric)
+  Purpose:  Target sampling percentage configured for this app (0-100)
+  TTL:      None (persistent config)
+  Set by:   First session creation for the app (cold start)
+```
+
+### 7.3 Key Lifecycle
+
+```
+Cold Start (first session for app):
+  WRITE: sampled_session:{appKey}:{sessionId}   ← created
+  WRITE: total_sessions_count:{appKey}           ← SET 1
+  WRITE: accepted_sessions_count:{appKey}        ← SET 1
+  WRITE: sampling_percentage:{appKey}            ← SET {target}
+
+Subsequent New Session:
+  READ:  total_sessions_count:{appKey}
+  READ:  accepted_sessions_count:{appKey}
+  READ:  sampling_percentage:{appKey}
+  WRITE: sampled_session:{appKey}:{sessionId}   ← created
+  WRITE: total_sessions_count:{appKey}           ← INCR (always)
+  WRITE: accepted_sessions_count:{appKey}        ← INCR (only if accepted)
+
+Existing Session Update:
+  READ:  sampled_session:{appKey}:{sessionId}   ← check existence + boundaries
+  WRITE: sampled_session:{appKey}:{sessionId}   ← update startTimeMs / endTimeMs
+  WRITE: sampled_session:{appKey}:{sessionId}   ← refresh TTL (EXPIRE)
+  (counters are NOT touched for existing session updates)
+```
+
+### 7.4 Isolation and Namespace Design
+
+Each `appKey` has exactly 3 persistent keys (counters + config) plus N session keys (one per active session). Keys from different apps never interfere:
+
+```
+App: EX-AAA-AUM (target: 25%)
+  total_sessions_count:EX-AAA-AUM = 500
+  accepted_sessions_count:EX-AAA-AUM = 125
+  sampling_percentage:EX-AAA-AUM = 25
+  sampled_session:EX-AAA-AUM:sess_001 = {...}
+  sampled_session:EX-AAA-AUM:sess_002 = {...}
+
+App: EX-BBB-XYZ (target: 50%)
+  total_sessions_count:EX-BBB-XYZ = 200
+  accepted_sessions_count:EX-BBB-XYZ = 100
+  sampling_percentage:EX-BBB-XYZ = 50
+  sampled_session:EX-BBB-XYZ:sess_001 = {...}
+```
+
+### 7.5 Lua Script Parameters — Mapping to Keys
+
+```lua
+-- KEYS array: Redis key references
+KEYS[1] = &quot;sampled_session:{appKey}:{sessionId}&quot;   -- session data
+KEYS[2] = &quot;total_sessions_count:{appKey}&quot;           -- total counter
+KEYS[3] = &quot;accepted_sessions_count:{appKey}&quot;        -- accepted counter
+KEYS[4] = &quot;sampling_percentage:{appKey}&quot;            -- target %
+
+-- ARGV array: runtime values passed from Java (Jedis)
+ARGV[1] = '{&quot;startTimeMs&quot;:...,&quot;endTimeMs&quot;:...,&quot;samplingStatus&quot;:&quot;false&quot;}'
+ARGV[2] = startTimeMs (long, epoch ms)
+ARGV[3] = endTimeMs   (long, epoch ms)
+ARGV[4] = timeoutMs   (long, ms — session gap tolerance)
+ARGV[5] = targetSamplingPercentage (int, 0-100)
+```
+
+---
+
+## 8. Session Object Schema — Full Specification
+
+### 8.1 Session JSON Structure
+
+The session JSON object stored at `sampled_session:{appKey}:{sessionId}` contains exactly 3 fields:
+
+```json
+{
+  &quot;startTimeMs&quot;: 1698765432100,
+  &quot;endTimeMs&quot;:   1698765445200,
+  &quot;samplingStatus&quot;: &quot;true&quot;
+}
+```
+
+### 8.2 Field Definitions
+
+| Field | Type | Description | Set When |
+|---|---|---|---|
+| `startTimeMs` | `long` (epoch ms) | Earliest event start time seen in this session | On creation (from ARGV[2]); updated if a later beacon has an earlier start |
+| `endTimeMs` | `long` (epoch ms) | Latest event end time seen in this session | On creation (from ARGV[3]); updated if a later beacon has a later end |
+| `samplingStatus` | `&quot;true&quot;` or `&quot;false&quot;` (string) | Whether this session is accepted for processing | On creation (sampling decision); never changed after first set |
+
+### 8.3 Field Behavior Detail
+
+**`startTimeMs`** — always holds the minimum start across all beacons seen for this session. Each incoming beacon may report an earlier start (e.g., a background XHR that started before the page started). The Lua script extends the window backward if `new_start &lt; stored_start`.
+
+**`endTimeMs`** — always holds the maximum end across all beacons seen for this session. The Lua script extends the window forward if `new_end &gt; stored_end`.
+
+**`samplingStatus`** — immutable after first write. Once a session is decided as accepted (`&quot;true&quot;`) or rejected (`&quot;false&quot;`), all subsequent beacons for that session return the same status. This is the session coherence guarantee. Note: stored as a string (`&quot;true&quot;` / `&quot;false&quot;`), not a JSON boolean.
+
+### 8.4 Schema Initialization (ARGV[1] template)
+
+When a new session is first created, the Java code constructs the initial JSON and passes it as ARGV[1] with `samplingStatus` defaulted to `&quot;false&quot;`. The Lua script then overwrites `samplingStatus` with the actual decision before returning:
+
+```json
+{
+  &quot;startTimeMs&quot;: &lt;from beacon&gt;,
+  &quot;endTimeMs&quot;:   &lt;from beacon&gt;,
+  &quot;samplingStatus&quot;: &quot;false&quot;
+}
+```
+
+The Lua script then calls `JSON.SET key .samplingStatus &quot;true&quot;` or `&quot;false&quot;` based on the sampling decision.
+
+### 8.5 Why the Schema Is Intentionally Minimal
+
+Every beacon for every active session triggers a Redis read (EXISTS + JSON.GET) and potentially a write. At millions of beacons per minute, even small schema additions multiply into meaningful overhead:
+
+- Each additional field adds network payload per round-trip
+- Redis JSON parse/serialize cost scales with object size
+- Lua script complexity grows with more field accesses
+
+Storing only `startTimeMs`, `endTimeMs`, `samplingStatus` keeps the per-operation cost as small as possible.
+
+### 8.6 TTL Calculation
+
+```
+TTL = sampled_session_retention_time_seconds + (timeoutMillis / 1000)
+    = 600s                                   + 30s   (for 30s timeout config)
+    = 630 seconds
+
+Set via: EXPIRE sampled_session:{appKey}:{sessionId} 630
+Refreshed on: every beacon update (existing session path)
+Expires on:   no beacons received for 630 seconds
+```
+
+The `timeoutMillis` is the session gap tolerance — the maximum gap between beacons still considered part of the same session. Adding it to the base TTL ensures the session key does not expire during a legitimate gap.
+
+### 8.7 Counter Schema
+
+The two counter keys store plain integers managed via Redis INCR:
+
+```
+total_sessions_count:{appKey}    → integer
+accepted_sessions_count:{appKey} → integer
+
+Sampling ratio = accepted / total * 100
+```
+
+Counter keys have no TTL. They persist across session expirations and accumulate for the lifetime of the application key in Redis.
+
+---
+
+## 9. Lua Script — Atomic Session Decision
+
+### 9.1 Why Lua Instead of Redlock
+
+This was the most important design decision in the project. Two approaches were considered:
+
+**Redlock (distributed locking):**
+- Acquire lock on session key
+- Read current session state
+- Update session state
+- Release lock
+
+Problem: this is 3+ network round trips to Redis per beacon. At millions of beacons per minute, this adds significant latency and load on the Redis cluster.
+
+**Lua Script in Redis:**
+- Send one `EVALSHA` call with all inputs
+- Redis executes the full read-check-update-decide workflow atomically server-side
+- One network round trip, total
+
+Result: same atomicity guarantee, fewer round trips, lower latency, simpler control flow.
+
+&gt; **Interview framing:** &quot;Same correctness goal, fewer round trips, lower latency, simpler operationally. In a collector path doing millions of operations per minute, this difference matters.&quot;
+
+### 9.2 Atomicity Guarantee
+
+Redis runs Lua scripts atomically. No other command can execute while a Lua script is running. This means:
+- Two collectors submitting simultaneous requests for `sess_12345` will be serialized by Redis
+- The second caller sees the state written by the first — no duplicate session creation
+- No distributed locks needed at the application layer
+
+### 9.3 Core Script Logic (Pseudocode)
+
+```lua
+-- Check if session already exists
+local session_exists = redis.call('EXISTS', KEYS[1])
+
+if session_exists == 1 then
+    -- Existing session: check time overlap
+    local stored_start = JSON.GET(KEYS[1], '.startTimeMs')
+    local stored_end   = JSON.GET(KEYS[1], '.endTimeMs')
+    local new_start    = ARGV[2]
+    local new_end      = ARGV[3]
+    local timeout      = ARGV[4]
+    
+    -- Time overlap check
+    if new_end &gt;= (stored_start - timeout) and new_start &lt;= (stored_end + timeout) then
+        -- Same session: update boundaries, return existing decision
+        if stored_start &gt; new_start then JSON.SET(KEYS[1], '.startTimeMs', new_start) end
+        if stored_end   &lt; new_end   then JSON.SET(KEYS[1], '.endTimeMs',   new_end)   end
+        redis.call('EXPIRE', KEYS[1], TTL)
+        return JSON.GET(KEYS[1], '.samplingStatus')
+    end
+end
+
+-- New session: create entry
+JSON.SET(KEYS[1], '.', ARGV[1])
+
+-- Initialize or read counters
+local accepted = tonumber(redis.call('GET', KEYS[3])) or 0
+local total    = tonumber(redis.call('GET', KEYS[2])) or 0
+local target   = tonumber(ARGV[5])
+
+if total == 0 then
+    -- First ever session for this app: always accept
+    redis.call('SET', KEYS[4], target)
+    redis.call('SET', KEYS[2], 1)
+    redis.call('SET', KEYS[3], 1)
+    JSON.SET(KEYS[1], '.samplingStatus', 'true')
+else
+    local current_pct = accepted / total * 100
+    redis.call('INCR', KEYS[2])  -- always increment total
+
+    if current_pct &lt; target then
+        -- Under target: ACCEPT
+        redis.call('INCR', KEYS[3])
+        JSON.SET(KEYS[1], '.samplingStatus', 'true')
+    elseif current_pct &gt; target then
+        -- Over target: REJECT (do NOT increment accepted)
+        JSON.SET(KEYS[1], '.samplingStatus', 'false')
+    else
+        -- At target: random decision
+        local rand = math.random(100)
+        if rand &lt;= target then
+            redis.call('INCR', KEYS[3])
+            JSON.SET(KEYS[1], '.samplingStatus', 'true')
+        else
+            JSON.SET(KEYS[1], '.samplingStatus', 'false')
+        end
+    end
+end
+
+-- Set TTL and return
+redis.call('EXPIRE', KEYS[1], 600 + tonumber(ARGV[4]) / 1000)
+return JSON.GET(KEYS[1], '.samplingStatus')
+```
+
+---
+
+## 10. Sampling Algorithm — 5 Scenarios
+
+### Scenario 1: Brand New Session (Cold Start)
+
+**State:** Redis DB is empty. First session ever for `EX-AAA-AUM`.
+
+**Script Parameters:**
+```
+KEYS[1] = &quot;sampled_session:EX-AAA-AUM:session_12345&quot;
+KEYS[2] = &quot;total_sessions_count:EX-AAA-AUM&quot;
+KEYS[3] = &quot;accepted_sessions_count:EX-AAA-AUM&quot;
+KEYS[4] = &quot;sampling_percentage:EX-AAA-AUM&quot;
+ARGV[5] = 25  (target: 25%)
+```
+
+**Redis Execution:**
+```lua
+EXISTS &quot;sampled_session:EX-AAA-AUM:session_12345&quot;
+-- Result: 0 (not found)
+
+JSON.SET &quot;sampled_session:EX-AAA-AUM:session_12345&quot; &quot;.&quot;
+  '{&quot;startTimeMs&quot;:1698765432100,&quot;endTimeMs&quot;:1698765445200,&quot;samplingStatus&quot;:&quot;false&quot;}'
+
+SET &quot;sampling_percentage:EX-AAA-AUM&quot; 25
+SET &quot;total_sessions_count:EX-AAA-AUM&quot; 1
+SET &quot;accepted_sessions_count:EX-AAA-AUM&quot; 1
+JSON.SET &quot;sampled_session:EX-AAA-AUM:session_12345&quot; &quot;.samplingStatus&quot; &quot;true&quot;
+
+EXPIRE &quot;sampled_session:EX-AAA-AUM:session_12345&quot; 630
+JSON.GET &quot;sampled_session:EX-AAA-AUM:session_12345&quot; &quot;.samplingStatus&quot;
+-- Returns: &quot;true&quot;
+```
+
+**Post-state:**
+```
+sampled_session:EX-AAA-AUM:session_12345 = {&quot;startTimeMs&quot;:...,&quot;endTimeMs&quot;:...,&quot;samplingStatus&quot;:&quot;true&quot;}
+total_sessions_count:EX-AAA-AUM          = 1
+accepted_sessions_count:EX-AAA-AUM       = 1
+sampling_percentage:EX-AAA-AUM           = 25
+```
+
+**Result:** SESSION ACCEPTED — first session always bootstraps the system.
+
+---
+
+### Scenario 2: New Session — Under Target
+
+**State:**
+```
+total_sessions_count:EX-AAA-AUM    = 100
+accepted_sessions_count:EX-AAA-AUM = 20
+Current ratio: 20/100 * 100        = 20%
+Target:                              25%
+```
+
+**Redis Execution:**
+```lua
+EXISTS &quot;sampled_session:EX-AAA-AUM:session_67890&quot;  -- 0 (new session)
+
+GET &quot;accepted_sessions_count:EX-AAA-AUM&quot;  -- &quot;20&quot;
+GET &quot;total_sessions_count:EX-AAA-AUM&quot;     -- &quot;100&quot;
+GET &quot;sampling_percentage:EX-AAA-AUM&quot;      -- &quot;25&quot;
+
+-- current_pct (20%) &lt; target_pct (25%) --&gt; ACCEPT
+INCR &quot;total_sessions_count:EX-AAA-AUM&quot;    -- now: 101
+INCR &quot;accepted_sessions_count:EX-AAA-AUM&quot; -- now: 21
+JSON.SET &quot;.samplingStatus&quot; &quot;true&quot;
+
+EXPIRE ... 630
+-- Returns: &quot;true&quot;
+```
+
+**Post-state counter drift:** 21/101 = 20.79% — moving toward 25%.
+
+**Result:** SESSION ACCEPTED — system needs more sessions to reach 25%.
+
+---
+
+### Scenario 3: New Session — Over Target
+
+**State:**
+```
+total_sessions_count:EX-AAA-AUM    = 100
+accepted_sessions_count:EX-AAA-AUM = 28
+Current ratio: 28/100 * 100        = 28%
+Target:                              25%
+```
+
+**Redis Execution:**
+```lua
+EXISTS &quot;sampled_session:EX-AAA-AUM:session_11111&quot;  -- 0 (new session)
+
+-- current_pct (28%) &gt; target_pct (25%) --&gt; REJECT
+INCR &quot;total_sessions_count:EX-AAA-AUM&quot;    -- now: 101  (only total)
+-- accepted_sessions_count stays: 28
+JSON.SET &quot;.samplingStatus&quot; &quot;false&quot;
+
+EXPIRE ... 630
+-- Returns: &quot;false&quot;
+```
+
+**Post-state counter drift:** 28/101 = 27.72% — moving toward 25%.
+
+**Result:** SESSION REJECTED — system is over quota, self-corrects toward 25%.
+
+---
+
+### Scenario 4: New Session — Exactly At Target (Random)
+
+**State:**
+```
+total_sessions_count:EX-AAA-AUM    = 100
+accepted_sessions_count:EX-AAA-AUM = 25
+Current ratio: 25/100 * 100        = 25%
+Target:                              25%
+```
+
+**Redis Execution:**
+```lua
+EXISTS &quot;sampled_session:EX-AAA-AUM:session_22222&quot;  -- 0 (new session)
+
+-- current_pct (25%) == target_pct (25%) --&gt; RANDOM
+INCR &quot;total_sessions_count:EX-AAA-AUM&quot;  -- now: 101
+
+local rand = math.random(100)  -- e.g. returns 18
+if 18 &lt;= 25 then
+    INCR &quot;accepted_sessions_count:EX-AAA-AUM&quot;  -- now: 26
+    JSON.SET &quot;.samplingStatus&quot; &quot;true&quot;
+else
+    JSON.SET &quot;.samplingStatus&quot; &quot;false&quot;
+end
+
+EXPIRE ... 630
+-- Returns: &quot;true&quot; (rand 18 &lt;= target 25)
+```
+
+**Result:** SESSION ACCEPTED (probabilistic). Expected statistical fluctuation around 25%.
+
+---
+
+### Scenario 5: Existing Session — Update Boundaries
+
+**State:**
+```
+sampled_session:EX-AAA-AUM:session_12345 already exists:
+{
+  &quot;startTimeMs&quot;: 1698765432100,
+  &quot;endTimeMs&quot;:   1698765445200,
+  &quot;samplingStatus&quot;: &quot;true&quot;
+}
+
+New event arrives:
+  startTime = 1698765430000  (earlier than stored)
+  endTime   = 1698765450000  (later than stored)
+  timeout   = 30000ms
+```
+
+**Redis Execution:**
+```lua
+EXISTS &quot;sampled_session:EX-AAA-AUM:session_12345&quot;  -- 1 (found)
+
+JSON.GET &quot;.startTimeMs&quot;  -- 1698765432100
+JSON.GET &quot;.endTimeMs&quot;    -- 1698765445200
+
+-- Time overlap check:
+-- new_end   (1698765450000) &gt;= stored_start (1698765432100) - 30000 = 1698765402100 --&gt; YES
+-- new_start (1698765430000) &lt;= stored_end   (1698765445200) + 30000 = 1698765475200 --&gt; YES
+-- OVERLAP CONFIRMED: same session
+
+-- Extend boundaries:
+if stored_start (1698765432100) &gt; new_start (1698765430000) then
+    JSON.SET &quot;.startTimeMs&quot; &quot;1698765430000&quot;   -- pushed back
+end
+if stored_end (1698765445200) &lt; new_end (1698765450000) then
+    JSON.SET &quot;.endTimeMs&quot; &quot;1698765450000&quot;     -- pushed forward
+end
+
+EXPIRE key 630  -- refreshed
+JSON.GET &quot;.samplingStatus&quot;
+-- Returns: &quot;true&quot;  (unchanged from original decision)
+```
+
+**Post-state session object:**
+```json
+{
+  &quot;startTimeMs&quot;: 1698765430000,
+  &quot;endTimeMs&quot;:   1698765450000,
+  &quot;samplingStatus&quot;: &quot;true&quot;
+}
+```
+
+**Result:** CONTINUE EXISTING SESSION — boundaries extended, decision unchanged.
+
+---
+
+## 11. Where This Fits in Collector Flow
+
+Sampling was placed **intentionally early** in the collector pipeline:
+
+```
+Browser Beacon hits collector
+        |
+        v
+BeaconProcessor: parse + validate
+        |
+        v
+[SAMPLING GATE — Redis + Jedis + Lua]  &lt;-- YOUR PROJECT
+        |
+  ACCEPT        REJECT
+    |               |
+    v               v
+Record Queue    Record Dropped
+(only sampled   reportUnsampled()
+ sessions)
+    |
+    v
+Downstream:
+  Metrics Pipeline
+  Event Grouper
+  Crash Grouper
+  Sessionizer (Kinesis)
+  Decorator
+```
+
+**Why early placement matters:** If you sample too late, you still pay for:
+- Record creation and object allocation
+- Validation CPU cycles
+- Queue memory and capacity
+- SQS/Kinesis message transmission
+- Downstream pipeline execution
+- License accounting for sessions that will be dropped anyway
+
+Sampling early in collector means unsampled sessions are dropped **before** they consume any of those resources.
+
+---
+
+## 12. Design Decisions and Tradeoffs
+
+### Why Redis?
+
+Redis provides:
+- Sub-millisecond read/write latency at scale
+- Built-in TTL support — automatic key expiration
+- Server-side Lua scripting with atomic execution guarantee
+- Wide operational familiarity in production infrastructure
+
+Alternative considered: an in-memory distributed cache like Memcached — but it lacks Lua scripting support, making the atomic session-decision pattern impossible without application-level locking.
+
+### Why Jedis?
+
+The EUM collector is a Java service. Jedis is a mature, battle-tested Java Redis client with:
+- Built-in connection pooling (`JedisPool` / `JedisPooled`)
+- Configurable read/write timeouts
+- `evalsha` support for Lua script pre-loading
+- Low dependency footprint
+
+Pooling is important because many beacon-processing threads need to hit Redis concurrently. A single shared connection would serialize all requests.
+
+### Why Lua Instead of Redlock?
+
+| | Redlock | Lua Script |
+|---|---|---|
+| Network round trips | 3+ (lock acquire, read, write, lock release) | 1 (single EVALSHA) |
+| Atomicity | Via distributed locking | Redis native atomic execution |
+| Complexity | Lock management, deadlock handling, retry logic | Single script file |
+| Latency impact | High | Minimal |
+| Failure mode | Lock can expire mid-operation | Script completes or fails atomically |
+
+In a latency-sensitive ingestion path, the 1-call Lua approach wins clearly.
+
+### Why Not Use Collector Local Cache Only?
+
+Collector is a stateless, horizontally scaled service. Multiple pods can receive events for the same session simultaneously. A local in-memory map only knows about events processed by that specific pod. There is no cross-pod shared state, so you cannot guarantee consistent sampling decisions for the same session.
+
+### Why TTL Instead of Explicit Cleanup?
+
+Explicit cleanup (a scheduled job that deletes old sessions) adds:
+- Operational complexity
+- Risk of premature deletion for active sessions
+- Need for distributed coordination on cleanup itself
+
+TTL aligns cleanup with the session lifecycle automatically. When a session is no longer active and the TTL expires, Redis removes the key. No code needed.
+
+### Why Keep the Session Object Small?
+
+Every beacon for every session triggers a Redis read. At millions of beacons per minute, even small increases in payload size multiply into meaningful network, memory, and CPU overhead. Storing only `startTimeMs`, `endTimeMs`, and `samplingStatus` keeps the Redis footprint minimal.
+
+### Fallback Tradeoff
+
+When Redis becomes unavailable:
+- Strict centralized sampling consistency is impossible
+- Collectors fall back to local processing to avoid blocking ingestion
+- Some sessions may be double-counted or not sampled correctly during the outage window
+- Availability is prioritized over perfect sampling consistency
+
+This is the correct tradeoff for a front-door ingestion service where data loss (blocking beacons) is worse than temporary sampling inaccuracy.
+
+---
+
+## 13. Impact and Metrics
+
+| Metric | Value |
+|--------|-------|
+| Reduction in EUM license usage | ~60% through session-level sampling |
+| Redis round-trips per sampling decision | 1 (single EVALSHA call via Lua) |
+| Target session create/update latency | &lt; 5ms |
+| Session TTL buffer | 600s + session timeout |
+| Redis connection pool size | 40 connections |
+| Redis client timeout | 1500ms |
+
+### How to Explain the 60% Reduction
+
+&gt; &quot;The reduction came from dropping unsampled sessions early in collector before they consumed downstream license-relevant processing. Because the decision was session-consistent and centralized in Redis, we reduced overall license usage without corrupting session-level observability for the sampled sessions.&quot;
+
+---
+
+## 14. Core Components Reference
+
+| Component | Responsibility |
+|-----------|---------------|
+| `BeaconProcessor` | Main entry point — parses beacons, routes to samplers |
+| `BrumSampler` | Browser session sampling logic — calls Lua via Jedis |
+| `MrumSampler` | Mobile session sampling logic — same algorithm |
+| `RedisSampledSessionModule` | Jedis connection management, script loading |
+| `SessionSamplingModule` | Configuration wiring and feature-flag control |
+| `sampled-session-redis-script.lua` | Atomic session decision — the core algorithm |
+| `AccountBeaconReporter` | Reports valid and unsampled beacon counts for license accounting |
+
+### Class-Level Detail
+
+**BrumSampler.sampleBrowserRecord(BrowserJsonBeacon)**
+1. Extract `appKey`, `sessionId`, `startTimeMs`, `endTimeMs` from beacon
+2. Build KEYS array: `[sessionKey, totalCountKey, acceptedCountKey, percentageKey]`
+3. Build ARGV array: `[sessionJson, startTime, endTime, timeout, targetPct]`
+4. Call `jedis.evalsha(scriptSha, keys, args)` — single Redis round trip
+5. Parse return value: `&quot;true&quot;` = sample, `&quot;false&quot;` = drop
+6. Call `acceptBeaconForProcessing(record)` or `reportUnsampledBeaconCount(record)`
+
+**RedisSampledSessionCache configuration:**
+```
+host          = localhost (or Redis cluster endpoint)
+port          = 6379
+timeout       = 1500ms
+maxConnections = 40
+scriptName    = sampled-session-redis-script.lua
+scriptType    = Redis Lua Script
+```
+
+---
+
+## 15. Configuration Properties
+
+| Property | Location | Purpose | Default |
+|----------|----------|---------|---------|
+| `sessionBasedSamplingEnabled` | CollectorConfiguration | Enable/disable BRUM sampling | `false` |
+| `mrumSamplingEnabled` | CollectorConfiguration | Enable/disable MRUM sampling | `false` |
+| `redisSampledSessionCacheConfig` | CollectorConfiguration | Redis connection config | `null` |
+| `sessionBasedSamplingConfigPath` | CollectorConfiguration | Path to Lua script | `../../sampled-session-redis-script.lua` |
+
+---
+
+## 16. Interview Q and A
+
+### Q: Why did you sample sessions instead of individual browser beacons?
+
+A browser session is the meaningful analytical unit in BRUM. If you sample individual beacons independently, you can keep some page-view events while dropping related AJAX calls, resources, or follow-up interactions. That breaks session integrity and distorts user-behavior analytics.
+
+Session-based sampling preserves the coherence of the user journey. Either the whole session is accepted or the whole session is rejected, which keeps metrics and investigations meaningful.
+
+### Q: Why couldn't you use an in-memory map in collector?
+
+Collector runs as multiple stateless pods. The same user's events can reach different pods. A local cache only knows about events seen by that particular pod. Two pods could each independently create `session_12345`, resulting in duplicate session records and inconsistent sampling decisions.
+
+Redis solves this by acting as a shared, centralized coordination layer that every collector pod queries and updates.
+
+### Q: Why Lua script over Redlock?
+
+The collector path is latency-sensitive. Redlock requires multiple calls: acquire lock, read/update session data, release lock. Lua lets Redis execute the entire decision path atomically in one server-side script. That means fewer network round trips, lower latency, and simpler control flow.
+
+We achieved the same atomicity goal with better performance characteristics for our workload.
+
+### Q: How did you handle the race condition exactly?
+
+Lua scripts run atomically inside Redis. No other command can execute while a Lua script is running. So even if two collectors submit near-simultaneous requests for the same session key, Redis serializes execution. The first script invocation creates/updates the session, and the second sees the updated state rather than racing on stale reads.
+
+This eliminated the duplicate-session creation issue that occurred when multiple collectors independently tried to create the same session.
+
+### Q: What happens if Redis goes down?
+
+The design includes fallback local processing so collectors can continue ingesting traffic rather than blocking or losing data. This prioritizes availability in a front-door ingestion service.
+
+Perfect global sampling consistency may be temporarily reduced during a Redis outage, but the system continues operating and switches back to Redis when connectivity is restored.
+
+### Q: How does the algorithm stay near the target sampling percentage?
+
+The Lua script maintains per-app counters in Redis: total sessions seen and accepted sessions. For each new session, it computes `accepted / total * 100` and compares with the target.
+
+- Below target: accept more sessions
+- Above target: reject more sessions
+- Exactly at target: randomized decision to avoid deterministic bias
+
+This creates a self-correcting feedback loop rather than a naive one-time random decision. Over time the system converges on the configured target percentage.
+
+### Q: Why is TTL important here?
+
+Redis is serving as a live coordination cache, not a permanent session history. Sessions that become inactive should disappear automatically. TTL prevents memory bloat and eliminates the need for a separate cleanup process. It aligns key lifetime with the session's natural lifetime.
+
+### Q: What was the hardest design decision?
+
+Deciding how to resolve the distributed race condition without adding too much latency to the collector hot path. That decision directly affected correctness, performance, and production safety.
+
+Evaluating Redlock versus Lua scripting was the key tradeoff. Lua was chosen because it preserved atomicity while avoiding the multiple extra Redis API calls that Redlock would require at scale.
+
+### Q: What is the session continuity logic?
+
+When a beacon arrives for an existing session key, the Lua script checks for time overlap:
+
+```
+new_end &gt;= stored_start - timeout  AND  new_start &lt;= stored_end + timeout
+```
+
+If this overlap condition holds, the new event is treated as part of the existing session. The script updates the session's start and end boundaries (taking the earliest start and latest end) and refreshes the TTL. The original sampling decision is returned unchanged — ensuring consistency for all events in that session.
+
+If the time ranges do not overlap (a straggler from a completely different time period), the session is treated as a new session and goes through the full sampling decision.
+
+### Q: What happens if the first session for a new app arrives?
+
+The first session is always accepted. This is the bootstrap case. The script detects `total_sessions_count = 0`, sets counters to `(total=1, accepted=1)`, stores the target sampling percentage, and marks the session as accepted. This prevents a cold-start rejection where the very first session could be dropped before any ratio exists.
+
+### Q: How does sampling for MRUM differ from BRUM?
+
+The underlying algorithm is the same — same Redis key structure, same Lua script logic, same per-app counters and self-correcting behavior. The difference is that `MrumSampler.sampleMobileRecord()` extracts session information from a mobile beacon format (iOS/Android SDK) rather than a browser beacon format. The feature flag is `mrumSamplingEnabled` (separate from `sessionBasedSamplingEnabled` for BRUM).
+
+### Q: What exactly is stored in Redis and why?
+
+Four key types per `appKey`: (1) the session JSON object per active `sessionId` holding time boundaries and sampling decision, (2) a total sessions counter, (3) an accepted sessions counter, and (4) the target sampling percentage. The counter pair drives the self-correcting algorithm. The session object enables session continuity — once a decision is made, every subsequent beacon for that session reads and returns the same status without recalculating.
+
+### Q: Why is `samplingStatus` stored as a string rather than a JSON boolean?
+
+Redis JSON module interop with Lua returns values as strings. Storing `&quot;true&quot;` and `&quot;false&quot;` as string values avoids type coercion issues when reading back from Redis via `JSON.GET` inside Lua and when parsing the return value back in Java via Jedis.
+
+---
+
+## 17. One-Liners and Soundbites
+
+| Context | What to Say |
+|---------|------------|
+| Opening summary | &quot;I built a Redis + Lua based session-sampling layer in collector so we could reduce BRUM license usage without breaking session integrity across distributed pods.&quot; |
+| Distributed systems angle | &quot;The core challenge was distributed race conditions — the same user session could hit different collectors at the same time.&quot; |
+| Design choice | &quot;I chose Lua over Redlock because it gave us atomicity with one Redis call instead of several network round trips.&quot; |
+| Impact framing | &quot;The value was not just saving licenses — it was saving them early in collector before unsampled sessions consumed downstream compute and queue bandwidth.&quot; |
+| Ownership statement | &quot;My contribution was the distributed coordination and sampling decision layer: Redis data model, Jedis integration, Lua workflow, TTL strategy, and failure-mode handling.&quot; |
+| Self-correcting algorithm | &quot;The algorithm is self-correcting — it continuously steers itself toward the configured target percentage rather than making a one-time random coin-flip per session.&quot; |
+| Session coherence | &quot;Either the whole session is sampled or the whole session is dropped. That is what preserves the integrity of user-session level analytics.&quot; |
+| Schema design | &quot;The session object stores exactly three fields: start time, end time, and sampling status. Every field earns its place — start and end enable the continuity check, status enables the coherence guarantee.&quot; |
+
+---
+
+## 18. Tech Stack
+
+| Category | Technologies |
+|----------|-------------|
+| Languages | Java, Lua |
+| Core Infrastructure | Redis, Jedis, collector pods (horizontal scaling) |
+| Java Client | Jedis connection pool, `evalsha` for Lua pre-loading |
+| EUM Platform Concepts | BRUM, browser beacons, BeaconProcessor, BrowserRecord, sessionizer, Kinesis, SQS |
+| Distributed Systems | Race conditions, atomic Lua execution, stateless pods, centralized session coordination, fallback mode |
+| Performance Concepts | Connection pooling, timeouts, single round-trip decisions, TTL-based cleanup, hot-path ingestion |
+| Operational Concepts | Feature flags, resilience, local fallback, scalability, latency-sensitive hot path |
+| EUM Downstream | L1/L2 Metrics Store, Event Grouper, Crash Grouper, Sessionizer, Decorator, xlb, API Server |
+
+---
+
+## 19. Final Prep Checklist
+
+Before walking into the interview, verify you can answer each of these without notes:
+
+- [ ] Can explain what EUM is and the full EUM Cloud pipeline top to bottom
+- [ ] Can explain where Collector sits in the EUM ingestion flow
+- [ ] Can explain why session-based sampling is better than beacon-level sampling
+- [ ] Can explain the distributed race condition and why multiple pods cause it
+- [ ] Can explain why a local in-memory cache is insufficient
+- [ ] Can defend Lua over Redlock with latency and round-trip reasoning
+- [ ] Can name all 4 Redis key types, their patterns, and what each stores
+- [ ] Can describe the 3-field session JSON schema and explain why each field exists
+- [ ] Can explain the TTL formula and why the timeout component is added
+- [ ] Can walk through all 5 sampling scenarios (cold start, under target, over target, at target, existing session)
+- [ ] Can explain the session continuity / time-overlap logic
+- [ ] Can explain the TTL strategy and why it is preferred over explicit cleanup
+- [ ] Can explain what happens during Redis downtime and why that tradeoff is correct
+- [ ] Can quantify the ~60% license reduction and explain how it was achieved
+- [ ] Can articulate exactly what your contribution was vs what already existed
+- [ ] Can explain why `samplingStatus` is immutable after first write
+- [ ] Can describe the self-correcting counter behavior across all 3 decision branches
+
+---
+
+*Last updated: 2026 | Project: EUM BRUM Session Sampling | Author: Abhishek Goyal*
+</code></pre>
+  </section>
+</main>
+<a class="backtop" href="#top" aria-label="Back to top">↑</a>
+</body>
+</html>
