@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCA One-Stop Guide | Diagnostics Collection Assistant</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f7fb;
+  --paper: #ffffff;
+  --paper-soft: #f9fbff;
+  --ink: #172033;
+  --muted: #5d6b82;
+  --subtle: #8591a6;
+  --line: #dfe5ef;
+  --blue: #2558d6;
+  --blue-2: #e7efff;
+  --teal: #007f7a;
+  --green: #16794c;
+  --amber: #a15c00;
+  --red: #bd3426;
+  --violet: #6251c7;
+  --shadow: 0 18px 55px rgba(23, 32, 51, .12);
+  --radius: 8px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(37, 88, 214, .08), transparent 34rem),
+    linear-gradient(180deg, #fbfcff 0%, var(--bg) 42rem);
+  color: var(--ink);
+  font: 14px/1.72 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.topbar {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 22px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  color: #fff;
+  background: linear-gradient(90deg, #173f9f, #2558d6 55%, #007f7a);
+  box-shadow: 0 2px 10px rgba(12, 25, 55, .2);
+}
+.logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #173f9f;
+  background: #fff;
+}
+.topbar strong { font-size: 15px; }
+.topbar span { opacity: .82; font-size: 12px; }
+.layout { display: grid; grid-template-columns: 284px minmax(0, 1fr); }
+.sidebar {
+  position: sticky;
+  top: 52px;
+  height: calc(100vh - 52px);
+  overflow: auto;
+  padding: 22px 14px;
+  background: rgba(255,255,255,.88);
+  border-right: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+.sidebar h2 {
+  margin: 0 8px 12px;
+  color: var(--subtle);
+  font-size: 11px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.sidebar nav { display: grid; gap: 2px; }
+.sidebar a {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.sidebar a:hover { color: var(--blue); background: var(--blue-2); text-decoration: none; }
+main {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 34px 44px 80px;
+}
+.hero {
+  min-height: 520px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(340px, .9fr);
+  gap: 32px;
+  align-items: center;
+  padding: 36px 0 44px;
+}
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.pulse {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 0 rgba(22, 121, 76, .5);
+  animation: pulse 2.2s infinite;
+}
+.hero h1 {
+  margin: 18px 0 14px;
+  color: #101829;
+  font-size: clamp(38px, 6vw, 76px);
+  line-height: .98;
+  letter-spacing: 0;
+}
+.hero p {
+  max-width: 720px;
+  color: var(--muted);
+  font-size: 17px;
+}
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 700;
+}
+.btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+.hero-panel {
+  position: relative;
+  min-height: 380px;
+  padding: 20px;
+  border: 1px solid rgba(37, 88, 214, .18);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.82);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.hero-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(140deg, rgba(37,88,214,.11), transparent 40%, rgba(0,127,122,.13));
+  pointer-events: none;
+}
+.mini-flow { position: relative; display: grid; gap: 12px; z-index: 1; }
+.mini-step {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(255,255,255,.92);
+  transform: translateY(8px);
+  opacity: 0;
+  animation: rise .55s ease forwards;
+}
+.mini-step:nth-child(2) { animation-delay: .12s; }
+.mini-step:nth-child(3) { animation-delay: .24s; }
+.mini-step:nth-child(4) { animation-delay: .36s; }
+.mini-step:nth-child(5) { animation-delay: .48s; }
+.mini-step b {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  color: #fff;
+  background: var(--blue);
+}
+.mini-step span { display: block; color: var(--muted); font-size: 12px; line-height: 1.35; }
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0 34px;
+}
+.stat {
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+.stat strong { display: block; font-size: 24px; line-height: 1; }
+.stat span { color: var(--muted); font-size: 12px; }
+section, article.md-content {
+  margin: 28px 0;
+}
+.section-card {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: 0 10px 30px rgba(23,32,51,.05);
+}
+.section-title {
+  margin: 0 0 10px;
+  color: #101829;
+  font-size: 26px;
+  line-height: 1.2;
+}
+.lead { color: var(--muted); font-size: 15px; max-width: 820px; }
+.source-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.source-card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-soft);
+}
+.source-head { display: flex; align-items: flex-start; gap: 10px; justify-content: space-between; }
+.source-head h3 { margin: 0; font-size: 15px; }
+.source-head span {
+  padding: 2px 7px;
+  border-radius: 99px;
+  color: var(--blue);
+  background: var(--blue-2);
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 700;
+}
+.source-meta { margin: 4px 0 8px; color: var(--subtle); font-size: 12px; }
+.source-card ul { margin: 0 0 10px; padding-left: 18px; }
+.source-link { font-weight: 700; font-size: 12px; }
+.diagram-grid { display: grid; gap: 18px; }
+.diagram {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: auto;
+}
+.diagram h3 { margin: 0 0 14px; font-size: 17px; }
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 14px;
+  align-items: stretch;
+  min-width: 880px;
+}
+.pipe-card {
+  position: relative;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #fff, #f7faff);
+}
+.pipe-card::after {
+  content: "";
+  position: absolute;
+  right: -15px;
+  top: 50%;
+  width: 15px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--blue), transparent);
+}
+.pipe-card:last-child::after { display: none; }
+.pipe-card b { display: block; margin-bottom: 8px; color: var(--blue); }
+.pipe-card span { display: block; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.engine-flow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  min-width: 900px;
+  align-items: start;
+}
+.lane { display: grid; gap: 10px; }
+.node {
+  min-height: 46px;
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  text-align: center;
+  background: #fff;
+  color: var(--ink);
+  font-size: 12px;
+  box-shadow: 0 6px 18px rgba(23,32,51,.05);
+}
+.node.blue { background: #e6f6ff; border-color: #9fd4f3; }
+.node.pink { background: #ffe1fa; border-color: #f6aae9; }
+.node.amber { background: #fff0c2; border-color: #f4c453; }
+.node.green { background: #dff7eb; border-color: #84d2a7; }
+.node.violet { background: #ecebff; border-color: #b6b2f0; }
+.diamond { transform: rotate(45deg); width: 92px; height: 92px; margin: 6px auto; }
+.diamond span { transform: rotate(-45deg); display: block; font-size: 11px; line-height: 1.25; }
+.connector {
+  width: 2px;
+  height: 22px;
+  margin: 0 auto;
+  background: linear-gradient(var(--blue), transparent);
+  animation: flowline 1.8s infinite;
+}
+.branch-grid { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 12px; min-width: 880px; }
+.branch { display: grid; gap: 8px; }
+.image-frame {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #08090b;
+  overflow: auto;
+}
+.image-frame img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.md-content {
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+.md-content h1, .md-content h2, .md-content h3, .md-content h4 {
+  line-height: 1.28;
+  letter-spacing: 0;
+}
+.md-content h1 {
+  margin: 38px 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 26px;
+}
+.md-content h2 { margin: 30px 0 10px; font-size: 21px; }
+.md-content h3 { margin: 22px 0 8px; font-size: 17px; }
+.md-content h4 { margin: 18px 0 6px; font-size: 15px; }
+.md-content h1:first-child { margin-top: 0; }
+.anchor {
+  float: left;
+  margin-left: -18px;
+  opacity: 0;
+  color: var(--subtle);
+}
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor { opacity: 1; }
+p { margin: 0 0 12px; }
+blockquote {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--blue);
+  border-radius: 0 7px 7px 0;
+  background: var(--blue-2);
+  color: #273a67;
+}
+code {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #f3f5f9;
+  color: #a33220;
+  font: 12px/1.5 "SFMono-Regular", Consolas, Menlo, monospace;
+}
+pre {
+  overflow: auto;
+  padding: 14px;
+  border-radius: 8px;
+  background: #101827;
+  color: #eaf0ff;
+}
+pre code { padding: 0; border: 0; background: transparent; color: inherit; }
+.table-wrap {
+  width: 100%;
+  overflow: auto;
+  margin: 16px 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+table { width: 100%; border-collapse: collapse; min-width: 680px; }
+th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+th { background: #f1f5ff; color: #24375f; font-size: 12px; }
+tr:last-child td { border-bottom: 0; }
+details {
+  margin: 10px 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+}
+summary {
+  padding: 10px 12px;
+  cursor: pointer;
+  color: var(--blue);
+  font-weight: 700;
+}
+details p { padding: 0 12px 12px; }
+.depth-1 { margin-left: 14px; }
+.depth-2 { margin-left: 28px; }
+.depth-3 { margin-left: 42px; }
+.backtop {
+  position: fixed;
+  right: 20px;
+  bottom: 18px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+@keyframes pulse {
+  70% { box-shadow: 0 0 0 12px rgba(22, 121, 76, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(22, 121, 76, 0); }
+}
+@keyframes rise { to { transform: translateY(0); opacity: 1; } }
+@keyframes flowline {
+  0% { opacity: .25; transform: scaleY(.4); transform-origin: top; }
+  45% { opacity: 1; transform: scaleY(1); }
+  100% { opacity: .25; transform: scaleY(.4); transform-origin: bottom; }
+}
+@media (max-width: 980px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  .sidebar nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  main { padding: 24px 18px 70px; }
+  .hero { grid-template-columns: 1fr; min-height: auto; }
+  .stats, .source-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+}
+
+
+/* Updated layout: page-native navigation instead of fixed sidebar */
+.layout { display: block; min-height: calc(100vh - 52px); }
+.sidebar { display: none !important; }
+main { width: min(1240px, 100%); }
+.section-index {
+  display: grid;
+  grid-template-columns: minmax(220px, .42fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  margin: 8px 0 34px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 10px 30px rgba(23,32,51,.06);
+}
+.section-index h2 {
+  margin: 4px 0 6px;
+  color: #101829;
+  font-size: 22px;
+  line-height: 1.2;
+}
+.section-index p { margin: 0; color: var(--muted); }
+.index-kicker {
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.index-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.index-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.index-links a:hover,
+.index-links a.active {
+  color: var(--blue);
+  border-color: rgba(37,88,214,.25);
+  background: var(--blue-2);
+  text-decoration: none;
+}
+
+/* Responsive native DCA engine diagram */
+.dca-engine-diagram { background: #070b10; color: #f8fbff; }
+.dca-engine-diagram h3 { color: #fff; }
+.dca-flow {
+  display: grid;
+  grid-template-columns: minmax(170px, .95fr) minmax(170px, .85fr) minmax(190px, .9fr) minmax(180px, .82fr);
+  gap: 16px;
+  align-items: start;
+  position: relative;
+}
+.flow-column,
+.flow-routes {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.flow-column {
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 8px;
+  background: rgba(255,255,255,.035);
+}
+.flow-routes {
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 4px;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 8px;
+  background: rgba(255,255,255,.035);
+}
+.flow-routes > .flow-label { grid-column: 1 / -1; }
+.flow-label {
+  color: #9cc8ff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.flow-node {
+  min-height: 46px;
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  border: 1px solid #cfd6e3;
+  border-radius: 6px;
+  background: #fff;
+  color: #172033;
+  text-align: center;
+  font-size: clamp(11px, .95vw, 13px);
+  font-weight: 700;
+  line-height: 1.22;
+  box-shadow: 0 8px 22px rgba(0,0,0,.18);
+}
+.flow-node.note {
+  border-style: dashed;
+  background: #fbfbfb;
+}
+.flow-node.blue { background: #bde9fb; border-color: #70c4e6; }
+.flow-node.pink { background: #f7c8f7; border-color: #eda0ec; }
+.flow-node.salmon { background: #ffe0d8; border-color: #ef8c77; }
+.flow-node.violet { background: #dedaff; border-color: #a9a1ef; }
+.flow-node.amber { background: #fff0bd; border-color: #f1ca57; }
+.flow-node.muted { background: #f2f4f8; color: #526073; }
+.flow-node.decision {
+  width: 88px;
+  min-height: 88px;
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  aspect-ratio: 1;
+  color: transparent;
+  font-size: 11px;
+  line-height: 1.1;
+  overflow: visible;
+  text-align: center;
+  transform: rotate(45deg);
+}
+.flow-node.decision::after {
+  content: attr(data-label);
+}
+.flow-node.decision::after {
+  color: #172033;
+  transform: rotate(-45deg);
+  display: block;
+  max-width: 74px;
+}
+.flow-node.decision:not([data-label])::after {
+  content: "Attachment present?";
+}
+.flow-node.decision.small {
+  width: 82px;
+  min-height: 82px;
+  font-size: 10px;
+}
+.flow-node.decision.small::after {
+  content: attr(data-label);
+  max-width: 68px;
+}
+.flow-node.decision.small:not([data-label])::after {
+  content: "Decision";
+}
+.flow-node.slant {
+  transform: skewX(-14deg);
+  width: min(170px, 100%);
+  justify-self: center;
+}
+.flow-node.engine {
+  border-left-width: 12px;
+  border-right-width: 12px;
+}
+.flow-arrow {
+  width: 2px;
+  height: 24px;
+  justify-self: center;
+  background: linear-gradient(#7db7ff, rgba(125,183,255,0));
+  animation: flowline 1.8s infinite;
+}
+.flow-branch-label,
+.flow-path {
+  justify-self: center;
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #fff;
+  color: #172033;
+  font-size: 12px;
+  font-weight: 800;
+}
+.flow-path.yes { background: #d9f7ec; color: #126142; }
+.flow-path.no { background: #ffe6e1; color: #a4382b; }
+.route-card {
+  display: grid;
+  gap: 9px;
+  align-content: start;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 8px;
+  background: rgba(0,0,0,.18);
+}
+.route-options {
+  display: grid;
+  gap: 8px;
+}
+.route-options div {
+  padding: 9px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.07);
+  color: #dbe7f7;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.route-options strong {
+  display: inline-block;
+  margin-right: 6px;
+  color: #fff;
+}
+.route-options span { color: #dbe7f7; }
+.image-frame { display: none !important; }
+
+@media (max-width: 980px) {
+  .section-index { grid-template-columns: 1fr; }
+  .index-links { gap: 7px; }
+  .index-links a { flex: 1 1 160px; justify-content: center; text-align: center; }
+  .pipeline { grid-template-columns: 1fr; min-width: 0; }
+  .pipe-card::after { display: none; }
+  .dca-flow { grid-template-columns: 1fr 1fr; }
+  .flow-routes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .topbar { height: auto; min-height: 52px; align-items: flex-start; padding: 10px 14px; }
+  .topbar span { display: block; }
+  .hero h1 { font-size: 42px; }
+  .section-index { padding: 16px; }
+  .dca-flow,
+  .flow-routes { grid-template-columns: 1fr; }
+  .flow-column { padding: 10px; }
+  .flow-node { font-size: 12px; }
+  .flow-node.decision,
+  .flow-node.decision.small {
+    width: auto;
+    min-height: 46px;
+    aspect-ratio: auto;
+    transform: none;
+  }
+  .flow-node.decision::after,
+  .flow-node.decision.small::after {
+    transform: none;
+    max-width: none;
+  }
+}
+
+
+section, article, h1, h2, h3 { scroll-margin-top: 78px; }
+</style>
+</head>
+<body>
+<header class="topbar" id="top">
+  <div class="logo">D</div>
+  <strong>DCA One-Stop Guide</strong>
+  <span>Diagnostics Collection Assistant | Generated from MD + Confluence + responsive diagrams</span>
+</header>
+<div class="layout">
+  <main>
+    <section class="hero" id="overview">
+      <div>
+        <div class="eyebrow"><i class="pulse"></i> Diagnostics Collection Assistant</div>
+        <h1>DCA One-Stop Guide</h1>
+        <p>The complete project guide for Diag AI / DCA: architecture, workflows, AI patterns, data stores, validation logic, operational context, and interview-ready deep dives. This page preserves every section from the comprehensive markdown and adds Confluence-backed context plus modern diagrams.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#visual-architecture">View diagrams</a>
+          <a class="btn" href="#1-elevator-pitch">Start guide</a>
+          <a class="btn" href="#source-links">Source links</a>
+        </div>
+      </div>
+      <div class="hero-panel" aria-label="DCA summary flow">
+        <div class="mini-flow">
+          <div class="mini-step"><b>1</b><div><strong>Mine support evidence</strong><span>bugs, SRs, comments, attachments, DevShell and AHF Web history</span></div></div>
+          <div class="mini-step"><b>2</b><div><strong>Extract structured intelligence</strong><span>strict JSON prompts, keywords, raw diagnostic paths, entities</span></div></div>
+          <div class="mini-step"><b>3</b><div><strong>Retrieve and rank</strong><span>embeddings, hybrid SRDC scoring, impact/symptom fallback</span></div></div>
+          <div class="mini-step"><b>4</b><div><strong>Validate evidence</strong><span>attachments, path validators, SRDC existence, collection coverage</span></div></div>
+          <div class="mini-step"><b>5</b><div><strong>Operationalize output</strong><span>commands, recommendations, audits, trackers, dashboards</span></div></div>
+        </div>
+      </div>
+    </section>
+    <div class="stats" aria-label="Guide statistics">
+      <div class="stat"><strong>4</strong><span>core use cases</span></div>
+      <div class="stat"><strong>4</strong><span>main data backends</span></div>
+      <div class="stat"><strong>8+</strong><span>AI techniques</span></div>
+      <div class="stat"><strong>27</strong><span>knowledge checks</span></div>
+    </div>
+    
+    <section class="section-index" aria-label="Section links">
+      <div>
+        <span class="index-kicker">Section Links</span>
+        <h2>Jump into the guide</h2>
+        <p>All navigation lives with the page content now, so the guide reads cleanly on desktop and mobile without a fixed sidebar.</p>
+      </div>
+      <nav class="index-links"><a href="#overview">Overview</a><a href="#confluence-context">Confluence Context</a><a href="#visual-architecture">Modern Diagrams</a><a href="#dca-one-stop-guide--from-basic-understanding-to-advanced-technical-preparation">DCA One-Stop Guide — From Basic Understanding to Advanced Technical Preparation</a><a href="#1-elevator-pitch">Elevator Pitch</a><a href="#2-what-this-project-is">What This Project Is</a><a href="#3-glossary--basics">Glossary &amp; Basics</a><a href="#4-architecture-overview">Architecture Overview</a><a href="#5-diaggenerator-deep-dive">DiagGenerator Deep Dive</a><a href="#6-diagadvisor-deep-dive">DiagAdvisor Deep Dive</a><a href="#7-validator--attachments">Validator &amp; Attachments</a><a href="#8-diagchecker">DiagChecker</a><a href="#9-ai-concepts-used--where-and-how">AI Concepts Used — Where and How</a><a href="#10-data-dbs-and-query-layer">Data, DBs, and Query Layer</a><a href="#11-regex--pattern-examples">Regex &amp; Pattern Examples</a><a href="#12-end-to-end-examples">End-to-End Examples</a><a href="#13-design-decisions--tradeoffs">Design Decisions &amp; Tradeoffs</a><a href="#14-llm--ai-deep-dive--all-concepts-you-need">LLM &amp; AI Deep Dive — All Concepts You Need</a><a href="#15-hallucination-handling--deep-dive">Hallucination Handling — Deep Dive</a><a href="#16-scale-processing-millions-of-bugs-in-diaggenerator">Scale: Processing Millions of Bugs in DiagGenerator</a><a href="#17-diaggenerator-run-frequency--scheduling">DiagGenerator Run Frequency &amp; Scheduling</a><a href="#18-knowledge-check-questions-27">Knowledge Check Questions (27)</a><a href="#19-quick-revision-sheet">Quick Revision Sheet</a><a href="#source-links">Source Links</a></nav>
+    </section>
+    <section class="section-card" id="confluence-context">
+      <h2 class="section-title">Confluence Context Added</h2>
+      <p class="lead">These notes are integrated directly in the page body, not hidden in the sidebar. They add the live project framing around the local markdown: DCA expansion, delivery tracking, on-call checks, dashboards, customer-side constraints, and collection implementation context.</p>
+      <div class="source-grid">
+  <article class="source-card">
+    <div class="source-head">
+      <h3>TFA AI Projects Progress Tracking</h3>
+      <span>Oracle Restricted</span>
+    </div>
+    <p class="source-meta">Last updated 2025-12-09</p>
+    <ul><li>Confirms DCA as Diagnostics Collection Assistant.</li><li>Tracks DiagGenerator, DiagChecker, DiagAdvisor, and DiagRequester workstreams.</li><li>Records the Generator target release as 26.1.0 and associates the work with TFA-23663, with prompt design, DevShell/AHF Web history capture, status-30 comments, validation, DB tables, and stage E2E testing.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=17160076464">Open Confluence source</a>
+  </article>
+
+  <article class="source-card">
+    <div class="source-head">
+      <h3>AHF AI Advisor - MVP Delivery Plan</h3>
+      <span>Oracle Restricted</span>
+    </div>
+    <p class="source-meta">Last updated 2025-09-16</p>
+    <ul><li>Frames AHF AI Advisor as an initiative to transform diagnostic collection, compliance assessment, and root-cause analysis.</li><li>Positions DCA under optimization of diagnostic collection accuracy and usage.</li><li>Describes the target behavior: query collection contents, detect whether requested diagnostics already exist, and feed missing diagnostics back into the collection driver.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=16660091762">Open Confluence source</a>
+  </article>
+
+  <article class="source-card">
+    <div class="source-head">
+      <h3>Diag AI Reviews</h3>
+      <span>Oracle Internal</span>
+    </div>
+    <p class="source-meta">Last updated 2026-02-17</p>
+    <ul><li>Contains ECS and DBaaSTools review examples where Diag AI output is evaluated against actual bugs.</li><li>Examples cover provisioning, infrapatching, memory reshape, storage reshape, local storage reshape, CPU reshape, and Data Guard.</li><li>Useful for grounding the guide in real effectiveness/gap review patterns rather than only code structure.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=18913587974">Open Confluence source</a>
+  </article>
+
+  <article class="source-card">
+    <div class="source-head">
+      <h3>Diag AI Business Dashboard</h3>
+      <span>Oracle Restricted</span>
+    </div>
+    <p class="source-meta">Last updated 2026-03-05</p>
+    <ul><li>Defines usage analytics goals for DiagAI: adoption, response quality, failures, latency, backlog tracking, and drill-down by org/area/time range.</li><li>Lists V1/V2 scope split across AHF and CMOS and identifies backend objects such as DBSE_STAT_TFA_PAGEVIEW, DBSE_TRIAGEAI_LLM_STATS, DIAGAI_MERGED_DOCS, and DBSE_AT_FEATURE_FEEDBACKS.</li><li>Adds observability context that complements the audit-table discussion in the local guide.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=19178635574">Open Confluence source</a>
+  </article>
+
+  <article class="source-card">
+    <div class="source-head">
+      <h3>Checklist for On Call (Auto Triage, Diag AI, Bug agent)</h3>
+      <span>Public</span>
+    </div>
+    <p class="source-meta">Last updated 2026-04-21</p>
+    <ul><li>Documents what the on-call team checks for DiagAI availability, generated output, expert-doc usage, and missing sections.</li><li>Names expected DiagAI sections: Problem Overview, Symptoms and Evidence, Timeline, Key Information for Supporting Investigation, Triage Recommendation, and References.</li><li>Describes monitoring signals such as smoke tests, success/failure counts, performance anomalies, consistency anomalies, Ocean alerts, and AutoJira/feedback reports.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=19449305884">Open Confluence source</a>
+  </article>
+
+  <article class="source-card">
+    <div class="source-head">
+      <h3>DIAG-AI@Customer - Feature Proposal and Design Constraints</h3>
+      <span>Oracle Highly Restricted</span>
+    </div>
+    <p class="source-meta">Last updated 2025-12-18</p>
+    <ul><li>Extends the diagnostic assistant concept to customer-side AHF deployments with an AI agent and chat interface.</li><li>Defines two basic modes: automatically driven on-site diagnosis and natural-language interrogation of collection information.</li><li>Captures constraints around LLM access, security, Private Agent Factory, and separate/plugin-style installation.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=18481845560">Open Confluence source</a>
+  </article>
+
+  <article class="source-card">
+    <div class="source-head">
+      <h3>Cloud Stack Collection for Autonomous Diagnostic Collection</h3>
+      <span>Oracle Restricted</span>
+    </div>
+    <p class="source-meta">Last updated 2026-01-20</p>
+    <ul><li>Explains cloud-stack diagnostic collection domains and how scope/resource combinations map to tasks.</li><li>Describes the REST-driven flow, list/check-space/package/upload stages, and CloudStackCollection job.</li><li>Provides implementation context for collection payloads, job-manager tasks, module getters, and test expectations.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=10517941622">Open Confluence source</a>
+  </article>
+</div>
+    </section>
+    <section class="section-card" id="visual-architecture">
+      <h2 class="section-title">Modern Diagrams</h2>
+      <p class="lead">The engine flow is recreated as native responsive HTML, with no embedded bitmap. The diagram collapses into readable vertical stages on mobile and keeps the full branching map on larger screens.</p>
+      <div class="diagram-grid">
+        <div class="diagram">
+          <h3>Layered DCA Architecture</h3>
+          <div class="pipeline">
+            <div class="pipe-card"><b>Inputs</b><span>Bug text, SR description, comments, attachments, AHF Web file history, DevShell CLOBs, user requests</span></div>
+            <div class="pipe-card"><b>Workflow Suite</b><span>DiagGenerator, DiagAdvisor, Validator, DiagChecker, DiagRequester</span></div>
+            <div class="pipe-card"><b>AI Intelligence</b><span>LLM extraction, entity parsing, embeddings, hybrid retrieval, ranking, reflection</span></div>
+            <div class="pipe-card"><b>Data Stores</b><span>BugDB, DDRDB, AHFDB, AIDB, vector stores, audit and tracker tables</span></div>
+            <div class="pipe-card"><b>Outputs</b><span>Problem JSON, SRDC commands, validation decisions, coverage checks, dashboards</span></div>
+          </div>
+        </div>
+        <div class="diagram dca-engine-diagram">
+          <h3>DCA Engine Flow</h3>
+          <div class="dca-flow" aria-label="Responsive DCA engine flow recreated in HTML">
+            <section class="flow-column intake">
+              <span class="flow-label">A. SR Intake</span>
+              <div class="flow-node note">Pre-SR processing handled outside this flow</div>
+              <div class="flow-node">Submit SR Request</div>
+              <div class="flow-arrow"></div>
+              <div class="flow-node">Interview process / interactive flow</div>
+              <div class="flow-arrow"></div>
+              <div class="flow-node">Rule based engine</div>
+              <div class="flow-branch-label">A</div>
+              <div class="flow-node blue">Diagnostics suggested and posted to SR</div>
+              <div class="flow-arrow"></div>
+              <div class="flow-node pink">SR Creation Completed</div>
+              <div class="flow-arrow"></div>
+              <div class="flow-node">AHF Inspect Automation</div>
+              <div class="flow-arrow"></div>
+              <div class="flow-node decision" data-label="Attachment present?">Attachment present?</div>
+            </section>
+
+            <section class="flow-column d2r">
+              <span class="flow-label">B. Attachment Available</span>
+              <div class="flow-path yes">Yes</div>
+              <div class="flow-node blue">D2R Processing<br>DiagSuggestion</div>
+              <div class="flow-node amber">Update SR with diagnostic attachment</div>
+              <div class="flow-node blue">D2R DiagnosticValidator</div>
+            </section>
+
+            <section class="flow-column advisor">
+              <span class="flow-label">C. No Attachment</span>
+              <div class="flow-path no">No</div>
+              <div class="flow-node salmon">Knowledge Assistant<br>(DBKnw)</div>
+              <div class="flow-branch-label">B</div>
+              <div class="flow-arrow"></div>
+              <div class="flow-node violet">DS Module</div>
+              <div class="flow-branch-label">C</div>
+              <div class="flow-arrow"></div>
+              <div class="flow-node violet engine">Suggestion Engine</div>
+            </section>
+
+            <section class="flow-column control">
+              <span class="flow-label">Guardrails</span>
+              <div class="flow-node slant">Guardrail</div>
+              <div class="flow-arrow"></div>
+              <div class="flow-node">PD Agent</div>
+              <div class="flow-node muted">Generate problem description from input details and/or TFA IN file</div>
+              <div class="flow-node amber">External update of SR / request more diagnostics</div>
+              <div class="flow-node amber">Recommendation response to DBKnw</div>
+            </section>
+
+            <section class="flow-routes">
+              <span class="flow-label">Environment Routing</span>
+              <div class="route-card">
+                <div class="flow-node">On Prem</div>
+                <div class="flow-node decision small" data-label="MOS Integration Available?">MOS Integration Available?</div>
+                <div class="route-options">
+                  <div><strong>Yes</strong><span>Call OASP with Serial#, SR#, diagnostic command → OASP sends request to customer gateway → diagnostic execution at customer → upload to SR via gateway.</span></div>
+                  <div><strong>No</strong><span>Internal SR update requesting more diagnostics.</span></div>
+                </div>
+              </div>
+              <div class="route-card">
+                <div class="flow-node">Exadata / DB Cloud Services</div>
+                <div class="flow-node decision small" data-label="Platinum?">Platinum?</div>
+                <div class="route-options">
+                  <div><strong>Yes</strong><span>Check if collection is in progress; Platinum support agent attempts to gather automatically.</span></div>
+                  <div><strong>No</strong><span>Agent determines whether gather/upload can be completed.</span></div>
+                </div>
+              </div>
+              <div class="route-card">
+                <div class="flow-node">Autonomous Database</div>
+                <div class="flow-node decision small" data-label="Cloud opt-in and log collection time?">Cloud opt-in and log collection time?</div>
+                <div class="route-options">
+                  <div><strong>Yes</strong><span>OneView log collection, then update SR with diagnostic attachment and validate through D2R.</span></div>
+                  <div><strong>No</strong><span>Recommendation response to DBKnw or external update requesting more diagnostics.</span></div>
+                </div>
+              </div>
+              <div class="route-card">
+                <div class="flow-node">Environment info not present</div>
+                <div class="flow-node amber">Recommendation with disclaimer to DBKnw</div>
+                <div class="flow-node muted">No recommendation message to DBKnw when confidence is insufficient.</div>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div class="diagram">
+          <h3>AI + Deterministic Validator Pattern</h3>
+          <div class="pipeline">
+            <div class="pipe-card"><b>LLM Output</b><span>keywords, entities, file paths, category ranks, suggested SRDC</span></div>
+            <div class="pipe-card"><b>Parse</b><span>JSON extraction, schema expectations, error handling</span></div>
+            <div class="pipe-card"><b>Validate</b><span>path validator, closed vocabulary, attachment scan, DB existence checks</span></div>
+            <div class="pipe-card"><b>Act or Fallback</b><span>persist, recommend, ask for collection, or return safe generic command</span></div>
+            <div class="pipe-card"><b>Audit</b><span>model, input, output, score, latency, status and tracker state</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <article class="md-content">
+      <h1 id="dca-one-stop-guide--from-basic-understanding-to-advanced-technical-preparation"><a class="anchor" href="#dca-one-stop-guide--from-basic-understanding-to-advanced-technical-preparation" aria-label="Link to section">#</a>DCA One-Stop Guide — From Basic Understanding to Advanced Technical Preparation</h1>
+<p><strong>Author:</strong> Abhishek Goyal <strong>Generated for code under:</strong> <code>src/workflows/implementation/usecases/dca</code> <strong>Technology:</strong> Python <strong>Focus Areas:</strong> LLM + Embeddings, AHFDB / DDRDB / AIDB, Deep Dive Ready</p>
+<p>---</p>
+<h2 id="contents"><a class="anchor" href="#contents" aria-label="Link to section">#</a>Contents</h2>
+<ol><li class="depth-0"><a href="#1-elevator-pitch">Elevator Pitch</a></li><li class="depth-0"><a href="#2-what-this-project-is">What This Project Is</a></li><li class="depth-0"><a href="#3-glossary--basics">Glossary &amp; Basics</a></li><li class="depth-0"><a href="#4-architecture-overview">Architecture Overview</a></li><li class="depth-0"><a href="#5-diaggenerator-deep-dive">DiagGenerator Deep Dive</a></li><li class="depth-0"><a href="#6-diagadvisor-deep-dive">DiagAdvisor Deep Dive</a></li><li class="depth-0"><a href="#7-validator--attachments">Validator &amp; Attachments</a></li><li class="depth-0"><a href="#8-diagchecker">DiagChecker</a></li><li class="depth-0"><a href="#9-ai-concepts-used--where-and-how">AI Concepts Used — Where and How</a></li><li class="depth-0"><a href="#10-data-dbs-and-query-layer">Data, DBs, and Query Layer</a></li><li class="depth-0"><a href="#11-regex--pattern-examples">Regex &amp; Pattern Examples</a></li><li class="depth-0"><a href="#12-end-to-end-examples">End-to-End Examples</a></li><li class="depth-0"><a href="#13-design-decisions--tradeoffs">Design Decisions &amp; Tradeoffs</a></li><li class="depth-0"><a href="#14-llm--ai-deep-dive--all-concepts-you-need">LLM &amp; AI Deep Dive — All Concepts You Need</a></li><li class="depth-0"><a href="#15-hallucination-handling--deep-dive">Hallucination Handling — Deep Dive</a></li><li class="depth-0"><a href="#16-scale-processing-millions-of-bugs-in-diaggenerator">Scale: Processing Millions of Bugs in DiagGenerator</a></li><li class="depth-0"><a href="#17-diaggenerator-run-frequency--scheduling">DiagGenerator Run Frequency &amp; Scheduling</a></li><li class="depth-0"><a href="#18-knowledge-check-questions-27">Knowledge Check Questions (27)</a></li><li class="depth-0"><a href="#19-quick-revision-sheet">Quick Revision Sheet</a></li></ol>
+<blockquote><strong>How to read this guide</strong>  <br>This document is intentionally structured from <strong>basic → intermediate → advanced</strong>. If you are new to the code, start with sections 1–4. If you already know the project and want deeper technical preparation, jump to sections 9–17.</blockquote>
+<p>---</p>
+<h2 id="quick-snapshot"><a class="anchor" href="#quick-snapshot" aria-label="Link to section">#</a>Quick Snapshot</h2>
+<ul><li class="depth-0"><strong>4</strong> primary use cases: Generator, Advisor, Validator, Checker</li><li class="depth-0"><strong>4</strong> main data backends: BugDB, DDRDB, AHFDB, AIDB</li><li class="depth-0"><strong>8+</strong> distinct AI techniques visible in code</li><li class="depth-0"><strong>27</strong> knowledge-check questions included in this guide</li><li class="depth-0"><strong>3</strong> new deep-dive sections: hallucinations, scale, scheduling</li></ul>
+<p>---</p>
+<h1 id="1-elevator-pitch"><a class="anchor" href="#1-elevator-pitch" aria-label="Link to section">#</a>1. Elevator Pitch</h1>
+<h2 id="30-second-version"><a class="anchor" href="#30-second-version" aria-label="Link to section">#</a>30-Second Version</h2>
+<blockquote>&quot;The DCA module is a diagnostics intelligence layer inside the Oracle AI platform. It takes bug descriptions, support requests, attachment inventories, diagnostic file metadata, and user problem statements, then uses a mix of <strong>LLMs, embeddings, vector search, rule-based validation, and database orchestration</strong> to do four things: generate structured diagnostic knowledge from bugs, suggest the right <code>tfactl diagcollect -srdc ...</code> command, validate whether an existing collection is already sufficient, and classify on-demand diagnostic requests into file or command lookups.&quot;</blockquote>
+<h2 id="2-minute-version"><a class="anchor" href="#2-minute-version" aria-label="Link to section">#</a>2-Minute Version</h2>
+<p>The DCA directory is not just one script. It is a <strong>suite</strong> of related workflows.</p>
+<p>At the center, <code>DiagGenerator</code> mines bugs and diagnostics, asks an LLM to extract strict JSON outputs, validates file paths, predicts impact/symptom categories, and stores the resulting structured data in AHF/DDR databases. That output becomes reusable diagnostic knowledge.</p>
+<p>Then there is <code>DiagAdvisor</code>, which takes a free-form problem description and turns it into a recommended diagnostic collection command. It first validates the description, may summarize it to fit token limits, extracts entities like error codes and keywords, semantically maps broad keywords to known SRDC keywords, performs embedding-based vector search against SRDC summaries, and if no strong SRDC match is found, falls back to an impact/symptom prediction pipeline.</p>
+<p><code>Validator</code> sits downstream of Advisor. It checks whether a support request already contains the right TFA collection or attachments. <code>DiagChecker</code> handles bug comments and ad-hoc requests, classifies requests into &quot;find a file&quot; vs &quot;find a command&quot;, and checks if the requested evidence already exists in the collection.</p>
+<p>So the overall value of DCA is: <strong>turn messy support/bug data into structured, searchable, automatable diagnostic guidance</strong>.</p>
+<p>---</p>
+<h1 id="2-what-this-project-is"><a class="anchor" href="#2-what-this-project-is" aria-label="Link to section">#</a>2. What This Project Is</h1>
+<p>One subtle but important point: the codebase itself does not expose a single authoritative acronym expansion in one file. So in this guide, <strong>DCA</strong> is treated as the umbrella diagnostics workflow suite located under this directory. Functionally, it behaves like a <strong>diagnostic collection intelligence platform</strong>.</p>
+<h2 id="core-use-cases"><a class="anchor" href="#core-use-cases" aria-label="Link to section">#</a>Core Use Cases</h2>
+<h3 id="diaggenerator"><a class="anchor" href="#diaggenerator" aria-label="Link to section">#</a>DiagGenerator</h3>
+<p>Builds structured bug diagnostic knowledge from raw bug text, comments, AHF Web file history, and DevShell file history.</p>
+<h3 id="diagadvisor"><a class="anchor" href="#diagadvisor" aria-label="Link to section">#</a>DiagAdvisor</h3>
+<p>Suggests the most appropriate TFA collection command from a free-form user problem description.</p>
+<h3 id="validator"><a class="anchor" href="#validator" aria-label="Link to section">#</a>Validator</h3>
+<p>Checks whether an SR/workspace already contains sufficient collections or whether a new collection should be requested.</p>
+<h3 id="diagchecker"><a class="anchor" href="#diagchecker" aria-label="Link to section">#</a>DiagChecker</h3>
+<p>Handles on-demand bug requests, categorizes requested items as files or commands, and checks collection coverage.</p>
+<blockquote><strong>Best framing</strong>  <br>Describe DCA as a <strong>multi-stage diagnostics intelligence pipeline</strong>. That sounds more accurate and more senior than calling it &quot;just an LLM feature&quot;.</blockquote>
+<h2 id="learning-path"><a class="anchor" href="#learning-path" aria-label="Link to section">#</a>Learning Path</h2>
+<div class="table-wrap"><table><thead><tr><th>Level</th><th>What to Understand</th><th>Key Files</th></tr></thead><tbody><tr><td>Basic</td><td>What each use case does and why it exists.</td><td><code>DiagGenerator.py</code>, <code>diag_advisor.py</code>, <code>validator.py</code>, <code>DiagChecker.py</code></td></tr><tr><td>Intermediate</td><td>How prompts, embeddings, DB queries, and JSON extraction interact.</td><td><code>description_processor.py</code>, <code>embedding_fetcher.py</code>, <code>prompt_manager.py</code>, <code>db_manager.py</code></td></tr><tr><td>Advanced</td><td>Hybrid retrieval, scheduler windows, audit tables, regex metadata generation, failure handling, and tradeoffs.</td><td><code>ImpactSymptomPrediction.py</code>, <code>generate_regex_metadata.py</code>, <code>diagnostic_validator.py</code>, <code>ahfdb_queries.py</code></td></tr></tbody></table></div>
+<p>---</p>
+<h1 id="3-glossary--basics"><a class="anchor" href="#3-glossary--basics" aria-label="Link to section">#</a>3. Glossary &amp; Basics</h1>
+<div class="table-wrap"><table><thead><tr><th>Term</th><th>Meaning in This Project</th><th>Why It Matters</th></tr></thead><tbody><tr><td><code>Bug</code></td><td>A bug number / report that has description text, comments, attachments, and possibly historical diagnostics.</td><td>It is the raw source entity for <code>DiagGenerator</code> and <code>DiagChecker</code>.</td></tr><tr><td><code>Problem Type</code></td><td>A normalized grouping for similar issues, e.g. performance / corruption / storage / internal errors.</td><td>Used for clustering bugs and generating reusable <code>ProblemJson</code>.</td></tr><tr><td><code>SRDC</code></td><td>Support diagnostic collection recipe used by TFA, for example <code>dbhangperflite</code>, <code>crsasm</code>, <code>DBCORRUPT</code>.</td><td>The main output of <code>DiagAdvisor</code> is an SRDC-based command.</td></tr><tr><td><code>AHFDB</code></td><td>AHF-side operational database storing bug diagnostics, tracker rows, workspace metadata, and request trackers.</td><td>Central persistence layer for generated diagnostics and workflow state.</td></tr><tr><td><code>DDRDB</code></td><td>Problem type, validation, and bug/problem mapping side used by <code>DBSEDBManager</code>.</td><td>Holds problem-type ids, template mappings, and structured problem JSONs.</td></tr><tr><td><code>AIDB</code></td><td>AI/vector database storing SRDC summary embeddings and impact/symptom vectors.</td><td>Used for semantic retrieval and vector similarity search.</td></tr><tr><td><code>Prompt</code></td><td>Instruction template loaded from Markdown files.</td><td>Controls strict JSON extraction, validation, entity extraction, and keyword mapping.</td></tr><tr><td><code>Embedding</code></td><td>Numeric vector representation of text, generated using <code>cohere.embed-english-v3.0</code>.</td><td>Used for similarity search between problem descriptions and known SRDC documents.</td></tr><tr><td><code>Vector Search</code></td><td>Similarity search using cosine distance or weighted hybrid scoring.</td><td>Lets the system retrieve the most relevant SRDC or impact candidates.</td></tr><tr><td><code>Audit Row</code></td><td>A persisted record of workflow input, output, model, latency, and status.</td><td>Important for observability and debugging.</td></tr><tr><td><code>Hallucination</code></td><td>When an LLM generates plausible-sounding but factually incorrect output.</td><td>Critical to handle in a production diagnostic system — wrong paths or wrong SRDCs have real operational consequences.</td></tr><tr><td><code>Context Window</code></td><td>The maximum token length an LLM can process in one call.</td><td>Governs why DiagAdvisor summarizes long descriptions before embedding them.</td></tr><tr><td><code>Temperature</code></td><td>A parameter controlling how deterministic (low) vs creative (high) LLM output is.</td><td>DCA uses low temperature for extraction prompts to reduce variability.</td></tr><tr><td><code>RAG</code></td><td>Retrieval-Augmented Generation — combining search results with an LLM prompt.</td><td>DiagAdvisor is a production-hardened RAG variant with hybrid retrieval and fallback.</td></tr></tbody></table></div>
+<blockquote><strong>AI is not used everywhere</strong>  <br>This project is intentionally hybrid. Some stages are AI-based, but many critical decisions are still <strong>rule-based, SQL-driven, regex-driven, and validator-driven</strong>. That is exactly what you want in a production support workflow.</blockquote>
+<p>---</p>
+<h1 id="4-architecture-overview"><a class="anchor" href="#4-architecture-overview" aria-label="Link to section">#</a>4. Architecture Overview</h1>
+<p>At the highest level, DCA has five layers:</p>
+<ol><li class="depth-0"><strong>Inputs:</strong> bug text, SR workspace, comments, attachments, DevShell history, AHF Web metadata, user descriptions.</li><li class="depth-0"><strong>Workflow Orchestration:</strong> <code>DiagGenerator</code>, <code>DiagAdvisor</code>, <code>Validator</code>, <code>DiagChecker</code>.</li><li class="depth-0"><strong>AI/Intelligence Layer:</strong> LLM calls, embedding provider, vector search, impact prediction, keyword mapping.</li><li class="depth-0"><strong>Persistence Layer:</strong> AHFDB, DDRDB, AIDB, BugDB.</li><li class="depth-0"><strong>Utility/Support Layer:</strong> prompts, query registry, message renderer, JSON parsers, validators, regex metadata tools.</li></ol>
+<h2 id="system-diagram"><a class="anchor" href="#system-diagram" aria-label="Link to section">#</a>System Diagram</h2>
+<pre><code class="language-text">INPUT SOURCES
+  ├─ Bug subject + comments
+  ├─ AHF Web file history
+  ├─ DevShell CLOB content
+  └─ SR description + attachments
+           │
+           ▼
+WORKFLOW SUITE
+  ├─ DiagGenerator      → Bug mining + JSON persistence
+  ├─ DiagAdvisor        → Description → SRDC command
+  ├─ Validator          → Checks existing collections
+  └─ DiagChecker        → Routes command vs file checks
+           │
+           ▼
+AI / INTELLIGENCE
+  ├─ Strict JSON extraction prompts
+  ├─ Entity extraction + keyword mapping
+  ├─ Embeddings + vector search
+  └─ Impact/Symptom prediction + reflection
+           │
+           ▼
+DATA STORES
+  ├─ BugDB
+  ├─ DDRDB / problem mappings
+  ├─ AHFDB / trackers / diagnostics
+  └─ AIDB / vectors / SRDC summaries
+           │
+           ▼
+OUTPUTS AND VALUE CREATED
+  ├─ Structured bug diagnostics
+  ├─ Recommended TFA commands
+  ├─ Validation decisions
+  └─ Auditable, repeatable diagnostics automation</code></pre>
+<p><strong>Figure 1 — DCA as a multi-stage diagnostics intelligence system</strong></p>
+<h2 id="project-tree-snapshot"><a class="anchor" href="#project-tree-snapshot" aria-label="Link to section">#</a>Project Tree Snapshot</h2>
+<pre><code class="language-text">dca/
+├── DiagGenerator.py
+├── diag_advisor/
+│   ├── diag_advisor.py
+│   ├── description_processor.py
+│   ├── embedding_fetcher.py
+│   └── keyword_mapper.py
+├── diag_validator/
+│   ├── validator.py
+│   ├── description_fetcher.py
+│   └── attachment/
+├── diag_checker/
+│   ├── DiagChecker.py
+│   ├── CategorizeQuery.py
+│   ├── DiagCommand.py
+│   └── DiagFile.py
+├── manager/
+│   ├── db_manager.py
+│   └── prompt_manager.py
+├── queries/
+├── prompts/
+├── resources/
+├── utils/
+└── validation_util/</code></pre>
+<h2 id="supporting-runtime-pieces"><a class="anchor" href="#supporting-runtime-pieces" aria-label="Link to section">#</a>Supporting Runtime Pieces</h2>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Purpose</th><th>Why It Matters</th></tr></thead><tbody><tr><td><code>__init__.py</code></td><td>Bootstraps env-aware DCA logger and exports version/build constants.</td><td>Shows the module is meant to run in multiple environments with controlled logging behavior.</td></tr><tr><td><code>clients/dca_client.py</code></td><td>CLI-style entrypoint that runs use cases through <code>UseCaseDriver</code> and stores validator outputs.</td><td>Important for understanding how these workflows are actually invoked operationally.</td></tr><tr><td><code>messages/message_renderer.py</code></td><td>Loads user-message templates and safely renders output text.</td><td>Keeps user-facing responses template-driven and avoids hardcoding text in workflow logic.</td></tr><tr><td><code>queries/__init__.py + QueryMapper</code></td><td>Auto-imports query modules and registers them by database category.</td><td>Explains how SQL becomes discoverable to all use cases without scattering query strings in business logic.</td></tr></tbody></table></div>
+<p>---</p>
+<h1 id="5-diaggenerator-deep-dive"><a class="anchor" href="#5-diaggenerator-deep-dive" aria-label="Link to section">#</a>5. DiagGenerator Deep Dive</h1>
+<p><code>DiagGenerator</code> is the &quot;knowledge creation&quot; engine of the DCA suite. It processes bugs, extracts structured diagnostic intelligence, stores it in AHFDB, and can also build aggregate problem-type JSON objects.</p>
+<h2 id="what-it-does"><a class="anchor" href="#what-it-does" aria-label="Link to section">#</a>What it does</h2>
+<ul><li class="depth-0">Fetches bugs by date range, problem type, explicit bug list, or default lookback window.</li><li class="depth-0">Gets bug descriptions from BugDB and status-30 comments from DDR-side data.</li><li class="depth-0">Predicts impact type and category by reusing <code>ImpactSymptomPrediction</code>.</li><li class="depth-0">Asks an LLM to extract strict keywords and raw diagnostic paths.</li><li class="depth-0">Gets AHF Web and DevShell file histories and asks an LLM to extract raw paths from them too.</li><li class="depth-0">Persists structured output into <code>AHFDT_BUG_DIAGNOSTICS</code>.</li><li class="depth-0">Optionally builds per-problem-type JSON by merging many bug records.</li><li class="depth-0">Supports scheduled execution with job tracker state and backlog/daily windows.</li></ul>
+<blockquote><strong>AI concept used here</strong>  <br>In <code>DiagGenerator</code>, AI is used primarily for <strong>structured information extraction</strong>, not open-ended text generation. The prompts are deliberately strict and ask for JSON only. This reduces ambiguity and makes downstream persistence deterministic.</blockquote>
+<h2 id="bug-to-diagnostics-flow"><a class="anchor" href="#bug-to-diagnostics-flow" aria-label="Link to section">#</a>Bug-to-Diagnostics Flow</h2>
+<pre><code class="language-text">1. Bug selection
+   ├─ start_date/end_date → date range query
+   ├─ problem_type → problem-type query
+   └─ bugs list or default last-N-days
+
+2. Per-bug summary processing
+   ├─ Fetch bug subject/description from BugDB
+   ├─ Append status-30 comments from DDR-side query if present
+   └─ Predict category + impact type using ImpactSymptomPrediction
+
+3. LLM strict extraction
+   ├─ System prompt: bug_data_json_prompt.md
+   ├─ Output JSON keys: keywords, raw_diagnostic_paths
+   └─ Exact error/process/component tokens + raw file paths only
+
+4. Diagnostic file mining
+   ├─ Query AHF Web file history from TFA_WORKSPACE / TFA_WORKSPACE_ACTIONS
+   ├─ Read DevShell history CLOBs in chunks using CHUNK_SIZE = 65536
+   └─ Ask LLM to split results into ahf_web and devshell raw file paths
+
+5. Persistence + aggregation
+   ├─ Persist into AHFDT_BUG_DIAGNOSTICS
+   ├─ Validate paths
+   ├─ Merge bugs into ProblemJson
+   └─ Update problem JSON store</code></pre>
+<p><strong>Figure 2 — The core DiagGenerator processing pipeline</strong></p>
+<h2 id="key-methods-you-should-know"><a class="anchor" href="#key-methods-you-should-know" aria-label="Link to section">#</a>Key Methods You Should Know</h2>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Role</th><th>Important Detail</th></tr></thead><tbody><tr><td><code>execute()</code></td><td>Main entry point.</td><td>Routes between scheduler mode, generator mode, and normal bug processing.</td></tr><tr><td><code>process_bugs()</code></td><td>Selects bugs and loops over them.</td><td>Supports date range, problem type, bug list, or last-N-days logic.</td></tr><tr><td><code>_process_bug_summary()</code></td><td>LLM-based extraction from bug text.</td><td>Combines BugDB description + status-30 comments + impact prediction.</td></tr><tr><td><code>_process_diagnostics()</code></td><td>Extracts raw file paths from AHF Web / DevShell.</td><td>LLM returns strict JSON with separate <code>ahf_web</code> and <code>devshell</code> arrays.</td></tr><tr><td><code>create_problem_json()</code></td><td>Builds aggregate problem JSON.</td><td>Merges many bugs into keyword-frequency and diagnostic-frequency maps.</td></tr><tr><td><code>persist_json_in_ahfdb()</code></td><td>Insert/update bug diagnostic records.</td><td>Uses insert first, then falls back to update on integrity conflict.</td></tr></tbody></table></div>
+<h2 id="ai-concepts-inside-diaggenerator"><a class="anchor" href="#ai-concepts-inside-diaggenerator" aria-label="Link to section">#</a>AI Concepts inside DiagGenerator</h2>
+<h3 id="1-impactsymptom-prediction-reuse"><a class="anchor" href="#1-impactsymptom-prediction-reuse" aria-label="Link to section">#</a>1. Impact/Symptom Prediction Reuse</h3>
+<p><code>DiagGenerator</code> inherits from <code>ImpactSymptomPrediction</code> and calls <code>get_impact_type()</code> to derive the likely category and impact type of a bug.</p>
+<h3 id="2-strict-json-extraction"><a class="anchor" href="#2-strict-json-extraction" aria-label="Link to section">#</a>2. Strict JSON Extraction</h3>
+<p>The LLM prompt is designed like an information-extraction contract: exact keywords only, exact raw paths only, no normalization.</p>
+<h3 id="3-structured-persistence"><a class="anchor" href="#3-structured-persistence" aria-label="Link to section">#</a>3. Structured Persistence</h3>
+<p>The AI output is never treated as final by itself. It is parsed using <code>JsonUtils.get_json_object()</code> and then stored in typed DB fields.</p>
+<h3 id="4-validation-after-ai"><a class="anchor" href="#4-validation-after-ai" aria-label="Link to section">#</a>4. Validation after AI</h3>
+<p>File paths extracted by the model are passed through <code>DiagnosticPathValidator</code>. This is a classic &quot;AI + deterministic validator&quot; pattern.</p>
+<h2 id="scheduler-and-tracker-flow"><a class="anchor" href="#scheduler-and-tracker-flow" aria-label="Link to section">#</a>Scheduler and Tracker Flow</h2>
+<p>The scheduler logic in <code>DiagGenerator</code> is more sophisticated than a simple cron job. It stores job state in <code>AHFDT_JOB_TRACKER</code> and computes either a <strong>backlog</strong> or <strong>daily</strong> window.</p>
+<pre><code class="language-text">schedular=true
+   │
+   ▼
+Tracker has recent last_success_run_date?
+   ├─ No / stale → Backlog mode (365d lookback)
+   └─ Yes       → Daily mode (1-day window)
+
+Then:
+- Persist RUNNING status in AHFDT_JOB_TRACKER
+- job name = DG_BUG_PROC_JOB
+- call process_bugs() over computed window
+
+Final state:
+- SUCCESS → save checkpoint
+- FAILED  → save error comments</code></pre>
+<p><strong>Figure 3 — Scheduler logic: backlog vs daily processing and tracker persistence</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Scheduler Constant</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>MAX_CHUNK_DAYS</code></td><td>30</td><td>Backlog processing is chunked to avoid huge windows.</td></tr><tr><td><code>HISTORICAL_LOOKBACK_DAYS</code></td><td>365</td><td>Initial backlog search starts at up to one year back.</td></tr><tr><td><code>_job_tracker_name()</code></td><td><code>DG_BUG_PROC_JOB</code></td><td>Tracker row key in <code>AHFDT_JOB_TRACKER</code>.</td></tr></tbody></table></div>
+<p>---</p>
+<h1 id="6-diagadvisor-deep-dive"><a class="anchor" href="#6-diagadvisor-deep-dive" aria-label="Link to section">#</a>6. DiagAdvisor Deep Dive</h1>
+<p><code>DiagAdvisor</code> is the best file to discuss when someone asks: <em>&quot;Where is the AI in this system?&quot;</em> It is the module that most clearly demonstrates modern AI orchestration patterns.</p>
+<h2 id="core-mission"><a class="anchor" href="#core-mission" aria-label="Link to section">#</a>Core mission</h2>
+<p>Given a free-form problem description, generate the best possible <code>tfactl diagcollect</code> command. Prefer a specific SRDC command if possible; otherwise fall back to a generic command.</p>
+<h2 id="processing-flow"><a class="anchor" href="#processing-flow" aria-label="Link to section">#</a>Processing Flow</h2>
+<pre><code class="language-text">1. Input description
+   └─ Free-form text from user, UI, API, or validator flow
+
+2. Valid description?
+   ├─ false → render error message
+   └─ true  → continue
+
+3. Description processing
+   ├─ Use token estimate and safe token threshold
+   ├─ Summarize only if needed for embedding safety
+   └─ Extract entities: error codes, hostnames, db names, keywords, event time
+
+4. Semantic normalization
+   ├─ Load known keywords from SRDC metadata
+   └─ LLM maps broad extracted keywords to canonical SRDC keywords
+
+5. Embedding + hybrid retrieval
+   ├─ Convert summary text to embedding using cohere.embed-english-v3.0
+   ├─ Query AHFDT_SRDC_SUMMARY using similarity + keyword score + error score
+   └─ Return top SRDC candidates
+
+6. SRDC match found?
+   ├─ Yes → return `tfactl diagcollect -srdc &lt;name&gt;`
+   └─ No  → fallback to impact / symptom prediction</code></pre>
+<p><strong>Figure 4 — DiagAdvisor: validation, summarization, normalization, embedding search, and fallback</strong></p>
+<h2 id="why-this-is-a-strong-ai-design"><a class="anchor" href="#why-this-is-a-strong-ai-design" aria-label="Link to section">#</a>Why this is a strong AI design</h2>
+<div class="table-wrap"><table><thead><tr><th>Stage</th><th>AI Technique</th><th>How It Is Done in Code</th><th>Why It Helps</th></tr></thead><tbody><tr><td>Description validation</td><td>LLM binary classification</td><td><code>DescriptionProcessor.is_valid_description()</code> prompts the model and expects <code>true/false</code>.</td><td>Prevents garbage input from entering the advisor pipeline.</td></tr><tr><td>Adaptive summarization</td><td>LLM summarization with token guardrails</td><td><code>generate_summary()</code> only summarizes when estimated tokens exceed safe embedding limits.</td><td>Preserves meaning while staying inside embedding limits.</td></tr><tr><td>Entity extraction</td><td>LLM structured extraction</td><td><code>extract_entity()</code> expects JSON fields like error codes and keywords.</td><td>Turns free text into reusable structured signals.</td></tr><tr><td>Keyword mapping</td><td>LLM semantic normalization</td><td>Broad keywords are mapped to canonical SRDC keywords using a prompt plus known keyword inventory.</td><td>Bridges natural language and product vocabulary.</td></tr><tr><td>SRDC retrieval</td><td>Embeddings + hybrid search</td><td><code>EmbeddingFetcher.find_matching_srdc()</code> combines vector similarity with keyword and error scoring.</td><td>More robust than pure embeddings alone.</td></tr><tr><td>Fallback prediction</td><td>Embedding search + LLM ranking/reflection</td><td><code>ImpactSymptomPrediction</code> generates top ranks and then performs a reflection step to refine them.</td><td>Provides a second path when no SRDC match is strong enough.</td></tr></tbody></table></div>
+<h2 id="important-code-behaviors"><a class="anchor" href="#important-code-behaviors" aria-label="Link to section">#</a>Important code behaviors</h2>
+<ul><li class="depth-0">If the description is invalid, the workflow does not continue — it returns a user-friendly message.</li><li class="depth-0">If an SRDC is found via embeddings, the output is <code>tfactl diagcollect -srdc &lt;name&gt;</code>.</li><li class="depth-0">If not, the workflow maps predicted symptom → problem → SRDC using JSON resources such as <code>symptoms_to_problem.json</code> and <code>problem_to_srdc.json</code>.</li><li class="depth-0">If still nothing specific is found, it returns the safe default <code>tfactl diagcollect</code>.</li><li class="depth-0">Every execution writes audit metadata including latency, source API, similarity score, model, and output command.</li></ul>
+<blockquote><strong>Useful one-line summary</strong>  <br>&quot;DiagAdvisor is a production-style hybrid retrieval pipeline: validate → summarize if needed → extract entities → normalize vocabulary → retrieve by vectors and lexical signals → fallback to predictive classification.&quot;</blockquote>
+<p>---</p>
+<h1 id="7-validator--attachments"><a class="anchor" href="#7-validator--attachments" aria-label="Link to section">#</a>7. Validator &amp; Attachments</h1>
+<p><code>Validator</code> is a decision layer on top of <code>DiagAdvisor</code>. It answers the operational question: <em>Do we already have the right collection in the SR/workspace, or should we ask the user to run one?</em></p>
+<h2 id="how-it-works"><a class="anchor" href="#how-it-works" aria-label="Link to section">#</a>How it works</h2>
+<ol><li class="depth-0">Validate that at minimum a <code>workspace</code> is present.</li><li class="depth-0">Resolve the description using <code>description_fetcher.py</code>. It tries to read the latest matching XML under the workspace, extract <code>&lt;SRDescription_c&gt;</code>, and normalize whitespace.</li><li class="depth-0">Call <code>DSClient</code>, which internally executes <code>DiagAdvisor</code>.</li><li class="depth-0">If an SRDC is suggested, call <code>AttachmentManager</code> / <code>AttachmentProcessor</code>.</li><li class="depth-0">Inspect attachment names; classify TFA zip collections vs non-TFA files.</li><li class="depth-0">Check whether the recommended SRDC collection exists for all relevant hosts.</li><li class="depth-0">Return a summary like &quot;logs available&quot; or &quot;run collection&quot;.</li></ol>
+<h2 id="validation-flow"><a class="anchor" href="#validation-flow" aria-label="Link to section">#</a>Validation Flow</h2>
+<pre><code class="language-text">Workspace input
+   │
+   ▼
+Description fetcher
+   └─ latest XML → SRDescription_c
+   │
+   ▼
+DiagAdvisor / DSClient
+   └─ suggest collection command
+   │
+   ▼
+AttachmentProcessor
+   ├─ scan attachment names
+   ├─ detect .tfa*.zip
+   └─ extract host + SRDC from zip naming
+   │
+   ▼
+Suggested SRDC exists on all nodes?
+   ├─ No  → Return: run collection / ask for more evidence
+   └─ Yes → Return: logs available / collection already exists</code></pre>
+<p><strong>Figure 5 — Validator converts an AI recommendation into an operational decision</strong></p>
+<h2 id="ai-concept-used-here"><a class="anchor" href="#ai-concept-used-here" aria-label="Link to section">#</a>AI concept used here</h2>
+<p>Validator itself is mostly <strong>orchestration and evidence checking</strong>. The AI step is delegated to <code>DiagAdvisor</code>. This separation is good architecture: recommendation generation is AI-heavy, while verification of existing evidence is deterministic and rule-based.</p>
+<h2 id="attachment-rules-worth-remembering"><a class="anchor" href="#attachment-rules-worth-remembering" aria-label="Link to section">#</a>Attachment rules worth remembering</h2>
+<ul><li class="depth-0">Files matching <code>\.tfa.*\.zip$</code> are treated as TFA collections.</li><li class="depth-0">If the attachment name contains <code>.tfa_srdc_&lt;name&gt;</code>, the SRDC is extracted from the filename.</li><li class="depth-0">Collections are grouped by host and then compared against the recommended SRDC.</li><li class="depth-0"><code>collection_exists</code> becomes true only if the SRDC appears for <strong>all</strong> hosts in the grouping.</li></ul>
+<p>---</p>
+<h1 id="8-diagchecker"><a class="anchor" href="#8-diagchecker" aria-label="Link to section">#</a>8. DiagChecker</h1>
+<p><code>DiagChecker</code> handles requests like: &quot;For this bug, is the requested evidence already present in the collection?&quot; It is a classification + lookup workflow.</p>
+<h2 id="flow-summary"><a class="anchor" href="#flow-summary" aria-label="Link to section">#</a>Flow summary</h2>
+<ol><li class="depth-0">Receive a bug monitoring payload or on-demand JSON payload.</li><li class="depth-0">If on-demand, create a request tracker row in <code>AHFDT_DC_REQUEST_TRACKER</code>.</li><li class="depth-0">Use an LLM prompt to categorize user intent into file lookup or command lookup.</li><li class="depth-0">If file: check file presence in AHFDB.</li><li class="depth-0">If command: embedding-search diagnostic summary docs and validate output files from the matched command.</li><li class="depth-0">Update tracker rows with AI output, response comment, and run status.</li></ol>
+<div class="table-wrap"><table><thead><tr><th>Component</th><th>Responsibility</th><th>Technique</th></tr></thead><tbody><tr><td><code>CategorizeQuery</code></td><td>Classify request into file vs command.</td><td>LLM JSON classification</td></tr><tr><td><code>DiagFileProcessor</code></td><td>Check if a file exists in collection and fetch absolute path.</td><td>SQL lookup</td></tr><tr><td><code>DiagCommandProcessor</code></td><td>Search similar diagnostic commands using embeddings.</td><td>Embedding search + file validation</td></tr></tbody></table></div>
+<blockquote><strong>AI concept used here</strong>  <br>DiagChecker uses AI in two distinct ways: first for <strong>intent classification</strong> (&quot;is the request about a file or a command?&quot;), then for <strong>semantic retrieval</strong> when the request is command-like and must be matched to existing diagnostic summary embeddings.</blockquote>
+<h2 id="advanced-point"><a class="anchor" href="#advanced-point" aria-label="Link to section">#</a>Advanced point</h2>
+<p><code>DiagCommandProcessor</code> does not stop at semantic similarity. After it retrieves likely matching commands, it checks whether the command's output file is actually present in the bug collection. That means the system uses AI for candidate generation, and database evidence for final verification.</p>
+<p>---</p>
+<h1 id="9-ai-concepts-used--where-and-how"><a class="anchor" href="#9-ai-concepts-used--where-and-how" aria-label="Link to section">#</a>9. AI Concepts Used — Where and How</h1>
+<p>This is the most important AI-focused section. Below is a clean mapping from <strong>AI concept → where used → how implemented</strong>.</p>
+<div class="table-wrap"><table><thead><tr><th>AI Concept</th><th>Where Used</th><th>How It Is Done in This Project</th></tr></thead><tbody><tr><td>Prompted information extraction</td><td>DiagGenerator</td><td>System prompts enforce strict JSON outputs for keywords and raw diagnostic paths. The goal is extraction, not creative generation.</td></tr><tr><td>Prompted entity extraction</td><td>DescriptionProcessor</td><td>The model extracts error codes, keywords, database names, hostnames, and event time into a typed JSON schema.</td></tr><tr><td>Semantic keyword normalization</td><td>DiagAdvisor / KeywordMapper</td><td>Broad user keywords are mapped to canonical SRDC vocabulary by giving the model both the description and the allowed keyword inventory.</td></tr><tr><td>Embeddings</td><td>DiagAdvisor, ImpactSymptomPrediction, DiagChecker</td><td>Text is converted to vectors using <code>cohere.embed-english-v3.0</code>. Those vectors are then matched against stored documents or impact vectors.</td></tr><tr><td>Hybrid retrieval</td><td>DiagAdvisor</td><td>Retrieval is not only vector-based. It combines <strong>embedding similarity</strong>, <strong>keyword_score</strong>, and <strong>error_score</strong> using SQL in AIDB.</td></tr><tr><td>LLM ranking</td><td>ImpactSymptomPrediction</td><td>Vector candidates are aggregated, then an LLM selects and ranks top categories/impacts with confidence and reasoning.</td></tr><tr><td>Reflection / self-review</td><td>ImpactSymptomPrediction</td><td>A second LLM pass refines the summary, root cause, ranks, and confidence. This is a reflection stage over initial model output.</td></tr><tr><td>Binary classification</td><td>Description validation</td><td>The model answers whether the problem description is sufficient / valid enough for downstream diagnosis.</td></tr></tbody></table></div>
+<h2 id="hybrid-retrieval-example"><a class="anchor" href="#hybrid-retrieval-example" aria-label="Link to section">#</a>Hybrid Retrieval Example</h2>
+<pre><code class="language-text"># Problem description
+&quot;ORA-00600 seen during commit path, LGWR slow, CHA_LOG_SYNC_HANG reported&quot;
+
+# Entity extraction might produce
+{
+  &quot;error_codes&quot;: [&quot;ORA-00600&quot;],
+  &quot;keywords&quot;: [&quot;LGWR&quot;, &quot;LOG SYNC&quot;, &quot;COMMIT&quot;]
+}
+
+# Keyword mapping might normalize to known SRDC keywords
+{
+  &quot;canonical_keywords&quot;: [&quot;LGWR&quot;, &quot;LOGSYNC&quot;]
+}
+
+# Retrieval query then combines
+weighted_score = f(embedding_similarity, keyword_score, error_score)
+
+# Final output
+tfactl diagcollect -srdc internalerror
+or
+dbhangperflite</code></pre>
+<h2 id="why-this-architecture-is-good"><a class="anchor" href="#why-this-architecture-is-good" aria-label="Link to section">#</a>Why this architecture is good</h2>
+<ul><li class="depth-0">LLMs handle ambiguity and semantic interpretation.</li><li class="depth-0">Embeddings handle similarity over messy natural language.</li><li class="depth-0">SQL handles ranking, filtering, and deterministic persistence.</li><li class="depth-0">Validators and regex rules protect production safety.</li></ul>
+<p>---</p>
+<h1 id="10-data-dbs-and-query-layer"><a class="anchor" href="#10-data-dbs-and-query-layer" aria-label="Link to section">#</a>10. Data, DBs, and Query Layer</h1>
+<h2 id="database-roles"><a class="anchor" href="#database-roles" aria-label="Link to section">#</a>Database roles</h2>
+<div class="table-wrap"><table><thead><tr><th>DB / Source</th><th>Typical Manager</th><th>Used For</th></tr></thead><tbody><tr><td><code>BugDB</code></td><td><code>BugDBManager</code></td><td>Bug description, subject, comments history.</td></tr><tr><td><code>DDRDB</code></td><td><code>DBSEDBManager</code></td><td>Problem types, bug selection queries, validation templates, problem JSON persistence.</td></tr><tr><td><code>AHFDB</code></td><td><code>AHFDBManager</code></td><td>Bug diagnostics store, job trackers, request trackers, workspace/attachment history, DevShell data.</td></tr><tr><td><code>AIDB</code></td><td><code>AIDBManager</code></td><td>SRDC summaries, embeddings, audit data, vector-based retrieval.</td></tr></tbody></table></div>
+<h2 id="core-tables--logical-stores-visible-in-code"><a class="anchor" href="#core-tables--logical-stores-visible-in-code" aria-label="Link to section">#</a>Core tables / logical stores visible in code</h2>
+<div class="table-wrap"><table><thead><tr><th>Store</th><th>Purpose</th><th>Seen In</th></tr></thead><tbody><tr><td><code>AHFDT_BUG_DIAGNOSTICS</code></td><td>Stores per-bug problem type, impact type, keywords, bug diagnostics, AHF Web diagnostics, DevShell diagnostics.</td><td><code>insert_dca_data</code>, <code>update_dca_diagnostic_data</code></td></tr><tr><td><code>AHFDT_JOB_TRACKER</code></td><td>Workflow checkpoints and scheduler states.</td><td><code>get_job_tracker_by_name</code>, <code>insert_job_tracker</code>, <code>update_job_tracker</code></td></tr><tr><td><code>AHFDT_DC_REQUEST_TRACKER</code></td><td>Tracks DiagChecker requests and their responses.</td><td><code>create_dc_request_tracker_entry_for_on_demand</code></td></tr><tr><td><code>AHFDT_SRDC_SUMMARY</code></td><td>Stores SRDC descriptions, keyword text, error text, and embeddings.</td><td><code>da_prob_srdc_vector_search</code></td></tr><tr><td><code>AHFDT_DS_AUDIT</code></td><td>Audit trail for suggestion/validation flows.</td><td><code>da_insert_ds_audit</code>, validator audit insert</td></tr><tr><td><code>IMPACTS_AND_SYM_VECTOR_STORE</code></td><td>Impact/symptom vector store.</td><td><code>ImpactSymptomPrediction.fetch_top_k_from_vector_store()</code></td></tr></tbody></table></div>
+<h2 id="why-querymapper-matters"><a class="anchor" href="#why-querymapper-matters" aria-label="Link to section">#</a>Why <code>QueryMapper</code> matters</h2>
+<p><code>QueryMapper</code> is a centralized SQL registry. Queries are registered by category such as <code>BUGDB</code>, <code>AHFDB</code>, <code>DDRDB</code>, and <code>AIDB</code>. It also uses an LRU cache so repeated lookups do not keep reparsing the registry.</p>
+<h2 id="current-maturity-note"><a class="anchor" href="#current-maturity-note" aria-label="Link to section">#</a>Current maturity note</h2>
+<p>One file worth noting during review is <code>diag_validator/document_search.py</code>. It currently exists as a scaffold with descriptive headers but without a substantive implementation. That suggests the attachment/document-search side has room for future expansion beyond the current attachment-name based checks.</p>
+<blockquote><strong>Architecture reason</strong>  <br>This design separates business logic from raw SQL. The workflow files stay readable, while query text remains grouped by database concern.</blockquote>
+<p>---</p>
+<h1 id="11-regex--pattern-examples"><a class="anchor" href="#11-regex--pattern-examples" aria-label="Link to section">#</a>11. Regex &amp; Pattern Examples</h1>
+<p>The project uses regexes in multiple places: problem mapping, placeholder detection, XML filename handling, and regex metadata generation.</p>
+<h2 id="1-problem-to-srdc-regex-examples"><a class="anchor" href="#1-problem-to-srdc-regex-examples" aria-label="Link to section">#</a>1. Problem-to-SRDC regex examples</h2>
+<div class="table-wrap"><table><thead><tr><th>Regex</th><th>Meaning</th><th>Used For</th></tr></thead><tbody><tr><td><code>.*ORA-00600.*</code></td><td>Any text containing ORA-00600.</td><td>Map internal error cases to <code>internalerror</code> SRDC.</td><td></td><td></td></tr><tr><td>`.*CRS-80(11\</td><td>13):.*`</td><td>Match CRS-8011 or CRS-8013 messages.</td><td>Clusterware node reboot/eviction classification.</td><td></td></tr><tr><td>`.*ORA-3270(1\</td><td>3\</td><td>4).*`</td><td>Match ORA-32701 / 32703 / 32704 family.</td><td>DB Hang/Performance mapping.</td></tr><tr><td><code>CHA_LOG_SYNC_HANG</code></td><td>Literal event tag.</td><td>Map event-driven cases to <code>dbhangperflite</code>.</td><td></td><td></td></tr></tbody></table></div>
+<h2 id="2-placeholder--wildcard-detection-in-path-validation"><a class="anchor" href="#2-placeholder--wildcard-detection-in-path-validation" aria-label="Link to section">#</a>2. Placeholder / wildcard detection in path validation</h2>
+<pre><code class="language-python">PLACEHOLDER_PATTERN = r&quot;(\{[^}]*\})|(\{[^}]*$)|(^[^/]*\{)|(\([^)]*\))|[*?]&quot;
+
+# What it detects:
+# - {hostname}
+# - broken placeholders like {missing_end
+# - filename prefixes containing '{'
+# - parenthesized fragments like (foo|bar)
+# - glob wildcards * and ?</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Input Pattern</th><th>Converted SQL LIKE</th><th>Why</th></tr></thead><tbody><tr><td><code>/u01/diag/{db}/alert_*.log</code></td><td><code>/u01/diag/%/alert_%.log</code></td><td>Placeholders and globs are normalized for SQL LIKE lookup.</td></tr><tr><td><code>hostname_trace?.trc</code></td><td><code>hostname_trace_.trc</code></td><td><code>?</code> becomes single-char SQL wildcard <code>_</code>.</td></tr></tbody></table></div>
+<h2 id="3-xml-description-fetch-regexes"><a class="anchor" href="#3-xml-description-fetch-regexes" aria-label="Link to section">#</a>3. XML description fetch regexes</h2>
+<pre><code class="language-python">EPOCH_PATTERN = r&quot;_(\d+)\.xml$&quot;
+DESCRIPTION_PATTERN = r&quot;&lt;SRDescription_c&gt;(.*?)&lt;/SRDescription_c&gt;&quot;</code></pre>
+<ul><li class="depth-0"><code>EPOCH_PATTERN</code> extracts the epoch suffix so the latest XML can be chosen.</li><li class="depth-0"><code>DESCRIPTION_PATTERN</code> extracts only the SR description payload.</li></ul>
+<h2 id="4-regex-metadata-generation-examples"><a class="anchor" href="#4-regex-metadata-generation-examples" aria-label="Link to section">#</a>4. Regex metadata generation examples</h2>
+<p><code>generate_regex_metadata.py</code> converts raw regex text into Lucene-friendly token metadata.</p>
+<div class="table-wrap"><table><thead><tr><th>Raw Regex</th><th>Token Extraction Behavior</th><th>Possible Tokens</th></tr></thead><tbody><tr><td>`(log\</td><td>lst\</td><td>out)`</td><td>Alternation group is split.</td><td><code>log</code>, <code>lst</code>, <code>out</code></td></tr><tr><td><code>.*alert_.*\.log</code></td><td>Regex symbols are removed; remaining text tokenized.</td><td><code>alert</code>, <code>log</code></td><td></td><td></td></tr><tr><td><code>/u01/app/oracle/diag/rdbms/db1/trace</code></td><td>Split on <code>/ . _ - : space</code>.</td><td><code>u01</code>, <code>app</code>, <code>oracle</code>, <code>diag</code>, <code>rdbms</code>, <code>db1</code>, <code>trace</code></td><td></td><td></td></tr></tbody></table></div>
+<blockquote><strong>Why regex metadata exists</strong>  <br>Full regex matching is expensive and harder to index. Token metadata gives a fast prefilter for search systems like Lucene before expensive matching happens.</blockquote>
+<p>---</p>
+<h1 id="12-end-to-end-examples"><a class="anchor" href="#12-end-to-end-examples" aria-label="Link to section">#</a>12. End-to-End Examples</h1>
+<h2 id="example-a--bug-summary-extraction"><a class="anchor" href="#example-a--bug-summary-extraction" aria-label="Link to section">#</a>Example A — Bug summary extraction</h2>
+<pre><code class="language-text"># Input bug text (simplified)
+# Bug Subject : Commits hanging intermittently
+# Bug Description : LGWR waits for redo write; ORA-00600 seen in trace; file /u01/app/oracle/diag/rdbms/db1/trace/db1_lgwr_1234.trc attached
+# Bug Comments : CHA_LOG_SYNC_HANG observed; please review alert log /u01/app/oracle/diag/rdbms/db1/trace/alert_db1.log
+
+# Expected strict JSON style output
+{
+  &quot;keywords&quot;: {
+    &quot;LGWR&quot;: &quot;1&quot;,
+    &quot;ORA-00600&quot;: &quot;1&quot;,
+    &quot;REDO&quot;: &quot;1&quot;,
+    &quot;TRACE&quot;: &quot;2&quot;
+  },
+  &quot;raw_diagnostic_paths&quot;: [
+    &quot;/u01/app/oracle/diag/rdbms/db1/trace/db1_lgwr_1234.trc&quot;,
+    &quot;/u01/app/oracle/diag/rdbms/db1/trace/alert_db1.log&quot;
+  ]
+}</code></pre>
+<h2 id="example-b--diagnostic-files-extraction-from-ahf_web-and-devshell"><a class="anchor" href="#example-b--diagnostic-files-extraction-from-ahf_web-and-devshell" aria-label="Link to section">#</a>Example B — Diagnostic files extraction from AHF_WEB and DEVSHELL</h2>
+<pre><code class="language-text">## AHF_WEB ##
+[{&quot;FULL_PATH&quot;: &quot;/u01/app/oracle/diag/rdbms/db1/trace/alert_db1.log&quot;}]
+
+## DEVSHELL ##
+cat /etc/oratab
+less /u01/app/oracle/product/19.0.0/dbhome_1/network/admin/sqlnet.ora
+
+# Output
+{
+  &quot;ahf_web&quot;: [&quot;/u01/app/oracle/diag/rdbms/db1/trace/alert_db1.log&quot;],
+  &quot;devshell&quot;: [
+    &quot;/etc/oratab&quot;,
+    &quot;/u01/app/oracle/product/19.0.0/dbhome_1/network/admin/sqlnet.ora&quot;
+  ]
+}</code></pre>
+<h2 id="example-c--diagadvisor-output"><a class="anchor" href="#example-c--diagadvisor-output" aria-label="Link to section">#</a>Example C — DiagAdvisor output</h2>
+<pre><code class="language-text">Input description:
+&quot;Database performance issue, commits slow, LGWR blocked, CHA_LOG_SYNC_HANG repeatedly observed&quot;
+
+Possible result:
+{
+  &quot;command&quot;: &quot;tfactl diagcollect -srdc dbhangperflite&quot;,
+  &quot;id&quot;: &quot;...audit-id...&quot;
+}</code></pre>
+<h2 id="example-d--validator-output"><a class="anchor" href="#example-d--validator-output" aria-label="Link to section">#</a>Example D — Validator output</h2>
+<pre><code class="language-json">{
+  &quot;mandatory_files_not_found&quot;: [],
+  &quot;summary&quot;: &quot;Requested logs are already available in the collection.&quot;,
+  &quot;suggestion&quot;: &quot;No fresh collection required&quot;,
+  &quot;log_coverage&quot;: &quot;&quot;,
+  &quot;error&quot;: &quot;&quot;,
+  &quot;status&quot;: &quot;SUCCESS&quot;
+}</code></pre>
+<h2 id="example-e--problem-to-srdc-mapping-data"><a class="anchor" href="#example-e--problem-to-srdc-mapping-data" aria-label="Link to section">#</a>Example E — Problem-to-SRDC mapping data</h2>
+<div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Mapped Problem</th><th>SRDC</th></tr></thead><tbody><tr><td><code>PERFORMANCE - DATABASE</code></td><td>DB Hang/Performance</td><td><code>dbhangperflite</code></td></tr><tr><td><code>ERROR - INTERNAL</code></td><td>Database Internal Errors (ORA-600, ORA-7445, ORA-700)</td><td><code>internalerror</code></td></tr><tr><td><code>CSS - NODE EVICTION</code></td><td>Clusterware Node Reboot/Eviction</td><td><code>crsasm</code></td></tr></tbody></table></div>
+<p>---</p>
+<h1 id="13-design-decisions--tradeoffs"><a class="anchor" href="#13-design-decisions--tradeoffs" aria-label="Link to section">#</a>13. Design Decisions &amp; Tradeoffs</h1>
+<h2 id="1-why-strict-json-prompts"><a class="anchor" href="#1-why-strict-json-prompts" aria-label="Link to section">#</a>1. Why strict JSON prompts?</h2>
+<p>Because downstream systems need machine-readable outputs. Free-form prose is bad for persistence, validation, and repeatable testing. So prompts explicitly say &quot;JSON only&quot; and define exact schemas.</p>
+<h2 id="2-why-mix-ai-with-validators"><a class="anchor" href="#2-why-mix-ai-with-validators" aria-label="Link to section">#</a>2. Why mix AI with validators?</h2>
+<p>Because AI can infer and normalize semantics, but it should not have the final say over production actions. This project correctly uses deterministic checks after AI output — for example path validation, file existence checks, SRDC existence in attachments, and DB-backed trackers.</p>
+<h2 id="3-why-hybrid-retrieval-instead-of-only-embeddings"><a class="anchor" href="#3-why-hybrid-retrieval-instead-of-only-embeddings" aria-label="Link to section">#</a>3. Why hybrid retrieval instead of only embeddings?</h2>
+<p>Because support descriptions often contain highly precise signals like <code>ORA-00600</code>, <code>CRS-8011</code>, or named events like <code>CHA_LOG_SYNC_HANG</code>. Pure vector search could miss the importance of those. Hybrid retrieval preserves lexical precision while still benefiting from semantic similarity.</p>
+<h2 id="4-why-use-fallback-prediction"><a class="anchor" href="#4-why-use-fallback-prediction" aria-label="Link to section">#</a>4. Why use fallback prediction?</h2>
+<p>Because no SRDC document collection is ever perfect. If semantic retrieval cannot confidently map a description to an SRDC, the system still has a second route: impact/symptom prediction → symptom-to-problem mapping → problem-to-SRDC mapping.</p>
+<h2 id="5-why-store-audit-data"><a class="anchor" href="#5-why-store-audit-data" aria-label="Link to section">#</a>5. Why store audit data?</h2>
+<p>Two reasons: observability and trust. In production AI systems, it is important to know <em>what input produced what output, via which model, in how much time, and with what confidence-like scores</em>.</p>
+<h2 id="6-why-chunk-devshell-clob-reads"><a class="anchor" href="#6-why-chunk-devshell-clob-reads" aria-label="Link to section">#</a>6. Why chunk DevShell CLOB reads?</h2>
+<p>Because DevShell records can be large CLOBs. Reading in fixed-size chunks avoids high memory spikes and makes DB driver interaction safer.</p>
+<blockquote><strong>Core tradeoff</strong>  <br>The system tries to maximize <strong>automation</strong> without losing <strong>determinism</strong>. That is the central architectural tradeoff across almost every module in this codebase.</blockquote>
+<p>---</p>
+<h1 id="14-llm--ai-deep-dive--all-concepts-you-need"><a class="anchor" href="#14-llm--ai-deep-dive--all-concepts-you-need" aria-label="Link to section">#</a>14. LLM &amp; AI Deep Dive — All Concepts You Need</h1>
+<p>This section is a one-stop reference for every LLM and AI concept that appears in DCA, with enough depth to answer any interviewer question. It goes well beyond just naming the techniques — it explains <strong>why</strong> each one is used, <strong>how</strong> it works internally, and what the <strong>tradeoffs</strong> are.</p>
+<p>---</p>
+<h2 id="141-prompting-strategies"><a class="anchor" href="#141-prompting-strategies" aria-label="Link to section">#</a>14.1 Prompting Strategies</h2>
+<h3 id="what-is-a-prompt"><a class="anchor" href="#what-is-a-prompt" aria-label="Link to section">#</a>What is a prompt?</h3>
+<p>A prompt is the instruction you give an LLM. In DCA, prompts are loaded from Markdown files (<code>prompts/</code> directory) via <code>prompt_manager.py</code>. This approach is good because prompts can be versioned, reviewed, and swapped without code changes.</p>
+<h3 id="system-prompt-vs-user-prompt"><a class="anchor" href="#system-prompt-vs-user-prompt" aria-label="Link to section">#</a>System prompt vs user prompt</h3>
+<ul><li class="depth-0"><strong>System prompt:</strong> Sets the LLM's role, constraints, and output format. In DCA this is where &quot;JSON only, no explanation&quot; lives.</li><li class="depth-0"><strong>User prompt:</strong> The actual input — bug text, description, entity list, etc.</li></ul>
+<p>Using separate system and user roles is a best practice for structured extraction because it separates <em>what the model is</em> from <em>what it is given</em>.</p>
+<h3 id="zero-shot-few-shot-and-chain-of-thought"><a class="anchor" href="#zero-shot-few-shot-and-chain-of-thought" aria-label="Link to section">#</a>Zero-shot, few-shot, and chain-of-thought</h3>
+<div class="table-wrap"><table><thead><tr><th>Technique</th><th>What It Means</th><th>DCA Usage</th></tr></thead><tbody><tr><td><strong>Zero-shot</strong></td><td>No examples in the prompt; model must generalize from instructions alone.</td><td>Keyword mapping and binary validation prompts.</td></tr><tr><td><strong>Few-shot</strong></td><td>A small number of input-output examples are included in the prompt to guide the model.</td><td>Path extraction prompts may include example bugs and their expected JSON outputs.</td></tr><tr><td><strong>Chain-of-thought (CoT)</strong></td><td>Prompt instructs the model to reason step by step before answering.</td><td>The reflection step in <code>ImpactSymptomPrediction</code> effectively does this — it reasons about candidates before producing final ranks.</td></tr></tbody></table></div>
+<h3 id="prompt-constraints-used-in-dca"><a class="anchor" href="#prompt-constraints-used-in-dca" aria-label="Link to section">#</a>Prompt constraints used in DCA</h3>
+<ul><li class="depth-0">Output in JSON only, no prose.</li><li class="depth-0">Do not normalize or infer; extract exactly as written.</li><li class="depth-0">Do not add keys not specified in the schema.</li><li class="depth-0">If a field is absent in input, return an empty array, not null.</li></ul>
+<p>These constraints are hallucination-mitigation measures baked into the prompt design.</p>
+<p>---</p>
+<h2 id="142-tokenization-and-context-window"><a class="anchor" href="#142-tokenization-and-context-window" aria-label="Link to section">#</a>14.2 Tokenization and Context Window</h2>
+<h3 id="what-is-tokenization"><a class="anchor" href="#what-is-tokenization" aria-label="Link to section">#</a>What is tokenization?</h3>
+<p>LLMs do not read raw text; they read <strong>tokens</strong> — sub-word units that balance vocabulary size and coverage. &quot;ORA-00600&quot; might tokenize as 4–5 tokens. Knowing this matters because LLMs have a maximum <strong>context window</strong> in tokens.</p>
+<h3 id="why-context-window-matters-in-dca"><a class="anchor" href="#why-context-window-matters-in-dca" aria-label="Link to section">#</a>Why context window matters in DCA</h3>
+<p>DiagAdvisor estimates token count of the input description before deciding whether to summarize. If the raw description is short enough, it is used directly. If it would exceed the embedding model's safe token threshold, it is first summarized by the LLM to a shorter version that preserves meaning.</p>
+<p>This prevents:</p>
+<ul><li class="depth-0">Truncation mid-sentence (the embedding API just cuts off).</li><li class="depth-0">Loss of key signals like ORA codes appearing later in long text.</li></ul>
+<h3 id="practical-token-math"><a class="anchor" href="#practical-token-math" aria-label="Link to section">#</a>Practical token math</h3>
+<p>A rough rule: 1 token ≈ 0.75 English words. So a 3,000-word SR description ≈ 4,000 tokens. If the embedding model's limit is 2,048, the description must be summarized first.</p>
+<p>---</p>
+<h2 id="143-embeddings--concept-to-implementation"><a class="anchor" href="#143-embeddings--concept-to-implementation" aria-label="Link to section">#</a>14.3 Embeddings — Concept to Implementation</h2>
+<h3 id="what-are-embeddings"><a class="anchor" href="#what-are-embeddings" aria-label="Link to section">#</a>What are embeddings?</h3>
+<p>An embedding is a fixed-length numeric vector that represents the semantic meaning of text. Texts that are semantically similar will have vectors that are close in high-dimensional space (measured by cosine similarity or dot product).</p>
+<h3 id="how-dca-uses-embeddings"><a class="anchor" href="#how-dca-uses-embeddings" aria-label="Link to section">#</a>How DCA uses embeddings</h3>
+<pre><code class="language-text">Input text (description or bug summary)
+        │
+        ▼
+cohere.embed-english-v3.0
+        │
+        ▼
+Dense vector of ~1024 dimensions
+        │
+        ▼
+Stored in AIDB (AHFDT_SRDC_SUMMARY or IMPACTS_AND_SYM_VECTOR_STORE)
+        │
+        ▼
+Queried at runtime using cosine similarity via SQL vector search</code></pre>
+<h3 id="why-coheres-embedding-model"><a class="anchor" href="#why-coheres-embedding-model" aria-label="Link to section">#</a>Why Cohere's embedding model?</h3>
+<p><code>cohere.embed-english-v3.0</code> is an enterprise-grade embedding model optimized for semantic search and retrieval. Oracle's AI platform provides access to it. It produces better-quality retrieval vectors than basic sentence transformer models.</p>
+<h3 id="embedding-storage-schema-conceptual"><a class="anchor" href="#embedding-storage-schema-conceptual" aria-label="Link to section">#</a>Embedding storage schema (conceptual)</h3>
+<pre><code class="language-sql">AHFDT_SRDC_SUMMARY (
+  srdc_name       VARCHAR2,
+  description     CLOB,
+  keyword_text    VARCHAR2,
+  error_text      VARCHAR2,
+  embedding       VECTOR  -- high-dimensional float array
+)</code></pre>
+<p>At query time, the runtime embedding of the user's description is compared against every stored SRDC embedding.</p>
+<p>---</p>
+<h2 id="144-vector-search-and-similarity-scoring"><a class="anchor" href="#144-vector-search-and-similarity-scoring" aria-label="Link to section">#</a>14.4 Vector Search and Similarity Scoring</h2>
+<h3 id="cosine-similarity"><a class="anchor" href="#cosine-similarity" aria-label="Link to section">#</a>Cosine similarity</h3>
+<p>Given two vectors A and B:</p>
+<pre><code class="language-text">cosine_similarity(A, B) = (A · B) / (||A|| × ||B||)</code></pre>
+<p>A score of 1.0 = identical meaning. A score close to 0 = unrelated. A score of -1.0 = opposites (rare in practice for document embeddings).</p>
+<h3 id="why-not-euclidean-distance"><a class="anchor" href="#why-not-euclidean-distance" aria-label="Link to section">#</a>Why not Euclidean distance?</h3>
+<p>Cosine similarity is magnitude-independent; it cares only about direction. This is more robust for document embeddings where one description might be 50 words and another 500 words.</p>
+<h3 id="hybrid-scoring-in-dca"><a class="anchor" href="#hybrid-scoring-in-dca" aria-label="Link to section">#</a>Hybrid scoring in DCA</h3>
+<pre><code class="language-text">final_score = w1 × vector_similarity
+            + w2 × keyword_score
+            + w3 × error_score</code></pre>
+<ul><li class="depth-0"><code>vector_similarity</code>: from embedding cosine match.</li><li class="depth-0"><code>keyword_score</code>: how many canonical SRDC keywords appear in the description.</li><li class="depth-0"><code>error_score</code>: whether exact Oracle error codes (ORA-xxxxx, CRS-xxxxx) appear.</li></ul>
+<p>This is better than pure vector search because:</p>
+<ul><li class="depth-0">ORA-00600 in the description should strongly boost <code>internalerror</code> SRDC, not just nudge it.</li><li class="depth-0">Pure embedding might semantically associate &quot;internal&quot; with other SRDCs.</li></ul>
+<h3 id="top-k-retrieval"><a class="anchor" href="#top-k-retrieval" aria-label="Link to section">#</a>Top-K retrieval</h3>
+<p>The query returns the top K most similar SRDC candidates. The system then applies a <strong>confidence threshold</strong> to decide if the best candidate is good enough to recommend, or whether the fallback path should be used.</p>
+<p>---</p>
+<h2 id="145-rag--retrieval-augmented-generation"><a class="anchor" href="#145-rag--retrieval-augmented-generation" aria-label="Link to section">#</a>14.5 RAG — Retrieval Augmented Generation</h2>
+<h3 id="what-is-rag"><a class="anchor" href="#what-is-rag" aria-label="Link to section">#</a>What is RAG?</h3>
+<p>RAG is an architecture where you:</p>
+<ol><li class="depth-0"><strong>Retrieve</strong> relevant documents or data from a knowledge store.</li><li class="depth-0"><strong>Augment</strong> the LLM's prompt with that retrieved content.</li><li class="depth-0"><strong>Generate</strong> a response that is grounded in the retrieved data, not just the LLM's training weights.</li></ol>
+<h3 id="rag-vs-pure-llm"><a class="anchor" href="#rag-vs-pure-llm" aria-label="Link to section">#</a>RAG vs pure LLM</h3>
+<div class="table-wrap"><table><thead><tr><th>Aspect</th><th>Pure LLM</th><th>RAG</th></tr></thead><tbody><tr><td>Knowledge source</td><td>Training data only.</td><td>External, up-to-date knowledge store.</td></tr><tr><td>Hallucination risk</td><td>High for domain-specific facts.</td><td>Lower, as model is grounded in retrieved text.</td></tr><tr><td>Freshness</td><td>Stale (training cutoff).</td><td>Current as the index.</td></tr><tr><td>Customization</td><td>Hard without fine-tuning.</td><td>Easy by updating the knowledge store.</td></tr></tbody></table></div>
+<h3 id="how-dca-implements-rag-and-why-it-is-better"><a class="anchor" href="#how-dca-implements-rag-and-why-it-is-better" aria-label="Link to section">#</a>How DCA implements RAG (and why it is better)</h3>
+<p>DiagAdvisor is RAG, but hardened:</p>
+<ul><li class="depth-0">The knowledge store (AIDB) is structured, versioned, and managed.</li><li class="depth-0">Retrieval uses hybrid scoring, not just vector similarity.</li><li class="depth-0">The LLM does ranking and reflection, not open-ended generation.</li><li class="depth-0">The final output is a controlled command, not free text.</li></ul>
+<p>This is sometimes called <strong>structured RAG</strong> or <strong>constrained RAG</strong> — the generation phase is heavily constrained to ensure the output is operationally safe.</p>
+<p>---</p>
+<h2 id="146-llm-ranking-and-reflection"><a class="anchor" href="#146-llm-ranking-and-reflection" aria-label="Link to section">#</a>14.6 LLM Ranking and Reflection</h2>
+<h3 id="what-is-llm-as-ranker"><a class="anchor" href="#what-is-llm-as-ranker" aria-label="Link to section">#</a>What is LLM-as-ranker?</h3>
+<p>Instead of using vector similarity scores alone to rank candidates, you pass the top candidates to the LLM and ask it to choose and rank them with reasoning. This works because the LLM can apply nuanced semantic judgment the scoring function cannot.</p>
+<p>In <code>ImpactSymptomPrediction</code>:</p>
+<ol><li class="depth-0">Top K impact/symptom candidates are retrieved by vector search.</li><li class="depth-0">The LLM is asked: &quot;Given this description and these candidates, which are most likely and in what order?&quot;</li><li class="depth-0">The LLM outputs a ranked list with confidence and brief reasoning.</li></ol>
+<h3 id="what-is-reflection"><a class="anchor" href="#what-is-reflection" aria-label="Link to section">#</a>What is reflection?</h3>
+<p>Reflection is a second LLM call that reviews the first output and refines it. In this project:</p>
+<ol><li class="depth-0">First pass: rank candidates, produce summary and root cause.</li><li class="depth-0">Second pass (reflection): review the first output, check consistency, refine rankings, improve root cause explanation.</li></ol>
+<p>This is analogous to how a good engineer reviews their own code before submitting it. The cost is one extra LLM call per execution. The benefit is meaningfully better output quality.</p>
+<h3 id="reflection-vs-chain-of-thought"><a class="anchor" href="#reflection-vs-chain-of-thought" aria-label="Link to section">#</a>Reflection vs chain-of-thought</h3>
+<div class="table-wrap"><table><thead><tr><th>Concept</th><th>Structure</th></tr></thead><tbody><tr><td>Chain-of-thought</td><td>Single pass where the model reasons before answering.</td></tr><tr><td>Reflection</td><td>Two separate passes — the second pass explicitly critiques and refines the first.</td></tr></tbody></table></div>
+<p>Both improve quality; reflection is stronger for complex ranking tasks where initial output can be inconsistent.</p>
+<p>---</p>
+<h2 id="147-token-limits-summarization-and-chunking"><a class="anchor" href="#147-token-limits-summarization-and-chunking" aria-label="Link to section">#</a>14.7 Token Limits, Summarization, and Chunking</h2>
+<h3 id="why-summarization-happens-before-embedding"><a class="anchor" href="#why-summarization-happens-before-embedding" aria-label="Link to section">#</a>Why summarization happens before embedding</h3>
+<p>Embedding models have a maximum token limit (often 512 or 2048 tokens depending on the model). If you feed in a 6,000-token SR description, it will be truncated. Truncation is dangerous because critical signals like the ORA error code might appear at token 3000 and get cut off.</p>
+<p>DiagAdvisor's flow:</p>
+<pre><code class="language-text">1. Estimate token count of raw description
+2. If count &gt; safe_threshold → summarize with LLM first
+3. Use the summary as the embedding input</code></pre>
+<p>The summarization prompt tells the model to preserve error codes, event names, and product identifiers — exactly the signals the retrieval step needs.</p>
+<h3 id="why-chunking-for-clob-reads"><a class="anchor" href="#why-chunking-for-clob-reads" aria-label="Link to section">#</a>Why chunking for CLOB reads</h3>
+<p>DevShell history is stored as CLOBs (Character Large Objects) in the database. A CLOB can be multiple megabytes. Reading the whole thing into memory at once is risky. DiagGenerator reads in chunks of <code>CHUNK_SIZE = 65536</code> bytes (64 KB), which:</p>
+<ul><li class="depth-0">Keeps memory usage bounded.</li><li class="depth-0">Is safe across different JDBC and Python DB driver versions.</li><li class="depth-0">Allows incremental processing.</li></ul>
+<p>---</p>
+<h2 id="148-temperature-determinism-and-why-it-matters"><a class="anchor" href="#148-temperature-determinism-and-why-it-matters" aria-label="Link to section">#</a>14.8 Temperature, Determinism, and Why It Matters</h2>
+<h3 id="what-is-temperature"><a class="anchor" href="#what-is-temperature" aria-label="Link to section">#</a>What is temperature?</h3>
+<p>Temperature is a parameter passed to the LLM API that controls output randomness.</p>
+<div class="table-wrap"><table><thead><tr><th>Temperature</th><th>Behavior</th></tr></thead><tbody><tr><td>0.0</td><td>Fully deterministic; always picks highest-probability token.</td></tr><tr><td>0.2–0.5</td><td>Low creativity; good for structured extraction tasks.</td></tr><tr><td>0.7–1.0</td><td>Higher creativity; good for open-ended text generation.</td></tr><tr><td>&gt; 1.0</td><td>Very random; usually not useful for production systems.</td></tr></tbody></table></div>
+<h3 id="dcas-use-of-temperature"><a class="anchor" href="#dcas-use-of-temperature" aria-label="Link to section">#</a>DCA's use of temperature</h3>
+<p>For <strong>extraction prompts</strong> (keywords, paths, entities), temperature is kept low. This maximizes consistency: running the same prompt twice should produce the same JSON. High temperature here would mean the same bug could produce different keyword sets on different runs, breaking reproducibility.</p>
+<p>For <strong>reflection and ranking</strong> prompts, slightly higher temperature might be acceptable since the model is reasoning, not just extracting. But even there, the output is validated before use.</p>
+<p>---</p>
+<h2 id="149-fine-tuning-vs-prompting"><a class="anchor" href="#149-fine-tuning-vs-prompting" aria-label="Link to section">#</a>14.9 Fine-Tuning vs Prompting</h2>
+<h3 id="why-dca-uses-prompting-not-fine-tuning"><a class="anchor" href="#why-dca-uses-prompting-not-fine-tuning" aria-label="Link to section">#</a>Why DCA uses prompting, not fine-tuning</h3>
+<div class="table-wrap"><table><thead><tr><th>Approach</th><th>When to Use</th><th>Tradeoffs</th></tr></thead><tbody><tr><td><strong>Prompting (zero/few-shot)</strong></td><td>Task is well-definable in instructions; quick iteration needed.</td><td>No training cost; may need careful prompt engineering.</td></tr><tr><td><strong>Fine-tuning</strong></td><td>Task requires deep domain adaptation; large labeled dataset available.</td><td>High training cost; model becomes static until next fine-tune cycle.</td></tr><tr><td><strong>RAG</strong></td><td>Knowledge changes frequently; domain facts must be current.</td><td>Retrieval quality matters; index must be maintained.</td></tr></tbody></table></div>
+<p>DCA uses prompting + RAG because:</p>
+<ul><li class="depth-0">SRDC knowledge changes as new collections are added — RAG keeps the knowledge current.</li><li class="depth-0">Extraction tasks are well-described in prompts without needing training data.</li><li class="depth-0">Oracle's support environment requires audit trails and reproducibility, which prompting + structured outputs provides cleanly.</li></ul>
+<p>---</p>
+<h2 id="1410-confidence-and-thresholds"><a class="anchor" href="#1410-confidence-and-thresholds" aria-label="Link to section">#</a>14.10 Confidence and Thresholds</h2>
+<h3 id="why-confidence-matters"><a class="anchor" href="#why-confidence-matters" aria-label="Link to section">#</a>Why confidence matters</h3>
+<p>A vector search always returns a top match — even if the description is completely unrelated to any SRDC. Without a confidence threshold, the system would always recommend <em>something</em>, even when it should say &quot;I don't know.&quot;</p>
+<p>DCA handles this by:</p>
+<ol><li class="depth-0">Using the hybrid score as a proxy for confidence.</li><li class="depth-0">Applying a minimum score threshold below which no SRDC is returned.</li><li class="depth-0">Falling back to <code>ImpactSymptomPrediction</code> when no SRDC is above threshold.</li><li class="depth-0">Falling back to generic <code>tfactl diagcollect</code> when even that cannot provide confident output.</li></ol>
+<p>This is a <strong>graceful degradation</strong> pattern — always return the most specific safe answer you can, and be explicit when you cannot be specific.</p>
+<h3 id="confidence-calibration-gap"><a class="anchor" href="#confidence-calibration-gap" aria-label="Link to section">#</a>Confidence calibration gap</h3>
+<p>One honest gap in the current design: LLM outputs do not provide calibrated probabilities. When the LLM says &quot;confidence: high&quot;, that is a qualitative assessment, not a statistically calibrated probability. Future improvement could involve:</p>
+<ul><li class="depth-0">Comparing model confidence to actual correctness over historical audit data.</li><li class="depth-0">Using ensemble voting across multiple models for higher-stakes decisions.</li></ul>
+<p>---</p>
+<h2 id="1411-audit-observability-and-production-ai"><a class="anchor" href="#1411-audit-observability-and-production-ai" aria-label="Link to section">#</a>14.11 Audit, Observability, and Production AI</h2>
+<h3 id="why-audit-tables-exist"><a class="anchor" href="#why-audit-tables-exist" aria-label="Link to section">#</a>Why audit tables exist</h3>
+<p>Every AI system that makes consequential decisions (like &quot;tell a support engineer to run this command&quot;) must have an audit trail. In DCA, every DiagAdvisor call writes a row to <code>AHFDT_DS_AUDIT</code> with:</p>
+<ul><li class="depth-0">Input description (or hash)</li><li class="depth-0">Output command</li><li class="depth-0">Model used</li><li class="depth-0">Similarity score</li><li class="depth-0">Latency</li><li class="depth-0">Timestamp</li></ul>
+<p>This enables:</p>
+<ul><li class="depth-0"><strong>Debugging:</strong> &quot;Why did the system suggest this command for that description?&quot;</li><li class="depth-0"><strong>Drift detection:</strong> If scores consistently drop over time, SRDC embeddings may need refreshing.</li><li class="depth-0"><strong>Accountability:</strong> SRE teams can trace every automated suggestion.</li></ul>
+<h3 id="what-to-say-in-an-interview-about-observability"><a class="anchor" href="#what-to-say-in-an-interview-about-observability" aria-label="Link to section">#</a>What to say in an interview about observability</h3>
+<blockquote>&quot;Because DCA operates in a production support environment, every AI decision is audited. We persist the input, output, model name, similarity score, and latency in <code>AHFDT_DS_AUDIT</code>. This is how you catch model drift, debug unexpected outputs, and build trust with users who are skeptical of AI automation.&quot;</blockquote>
+<p>---</p>
+<h2 id="1412-the-ai--deterministic-validator-pattern"><a class="anchor" href="#1412-the-ai--deterministic-validator-pattern" aria-label="Link to section">#</a>14.12 The &quot;AI + Deterministic Validator&quot; Pattern</h2>
+<p>This is the single most important design pattern in DCA and worth rehearsing as a clean statement.</p>
+<pre><code class="language-text">[AI output]
+    │
+    ▼
+[Deterministic validator]
+    │
+    ├─ Valid → persist / act
+    └─ Invalid → log, flag, fallback</code></pre>
+<p>Examples in DCA:</p>
+<ul><li class="depth-0">LLM extracts file paths → <code>DiagnosticPathValidator</code> checks for placeholders and globs.</li><li class="depth-0">LLM suggests SRDC → <code>AttachmentProcessor</code> checks whether that SRDC actually exists in the attachment list.</li><li class="depth-0">LLM classifies request → DB query verifies whether the file/command actually exists.</li></ul>
+<h3 id="why-this-matters"><a class="anchor" href="#why-this-matters" aria-label="Link to section">#</a>Why this matters</h3>
+<p>AI models can hallucinate. In a support context, acting on a hallucinated file path or SRDC name could waste engineer time or miss a real problem. The deterministic layer ensures the AI is used for what it is good at (semantic reasoning) while keeping the final action safe and verifiable.</p>
+<p>---</p>
+<h1 id="15-hallucination-handling--deep-dive"><a class="anchor" href="#15-hallucination-handling--deep-dive" aria-label="Link to section">#</a>15. Hallucination Handling — Deep Dive</h1>
+<blockquote><strong>Interview Question:</strong> &quot;How do you handle hallucinations here?&quot;</blockquote>
+<p>This deserves a dedicated section because it is the most common and most important question interviewers ask about any production LLM system.</p>
+<h2 id="what-hallucination-means-in-dcas-context"><a class="anchor" href="#what-hallucination-means-in-dcas-context" aria-label="Link to section">#</a>What hallucination means in DCA's context</h2>
+<p>A hallucination in this project would be:</p>
+<ul><li class="depth-0">The LLM inventing a file path like <code>/u01/oracle/fake_trace/nonexistent.trc</code> that was never in the bug text.</li><li class="depth-0">The LLM inventing an SRDC name like <code>dbfixall</code> that does not exist in the known SRDC catalog.</li><li class="depth-0">The LLM extracting a keyword like <code>LGWR_FIX</code> which is a plausible-sounding but non-existent Oracle process name.</li><li class="depth-0">The model producing malformed JSON that breaks the persistence pipeline.</li></ul>
+<p>Any of these would cause real operational problems: wrong diagnostic guidance, broken DB inserts, or wasted support engineer time.</p>
+<h2 id="dcas-multi-layer-hallucination-defense"><a class="anchor" href="#dcas-multi-layer-hallucination-defense" aria-label="Link to section">#</a>DCA's multi-layer hallucination defense</h2>
+<p>DCA does not rely on a single defense. It uses at least <strong>five distinct layers</strong>:</p>
+<h3 id="layer-1-strict-prompt-constraints"><a class="anchor" href="#layer-1-strict-prompt-constraints" aria-label="Link to section">#</a>Layer 1: Strict prompt constraints</h3>
+<p>The prompts explicitly forbid the model from:</p>
+<ul><li class="depth-0">Inventing data not present in the source text.</li><li class="depth-0">Normalizing paths (e.g., converting <code>/u01/</code> to <code>/opt/</code>).</li><li class="depth-0">Adding extra JSON keys not specified in the schema.</li><li class="depth-0">Returning prose explanations alongside JSON.</li></ul>
+<p>This reduces the <strong>surface area for hallucination</strong> by leaving the model less room to improvise.</p>
+<h3 id="layer-2-closed-vocabulary-keyword-mapping"><a class="anchor" href="#layer-2-closed-vocabulary-keyword-mapping" aria-label="Link to section">#</a>Layer 2: Closed-vocabulary keyword mapping</h3>
+<p>In <code>KeywordMapper</code>, when the LLM is asked to normalize extracted keywords to SRDC vocabulary, it is given the <strong>full list of known canonical keywords</strong> as part of the prompt. The model is instructed to only use keywords from that list, not invent new ones.</p>
+<p>This is called a <strong>constrained decoding</strong> approach at the prompt level: the model cannot invent a keyword because the prompt tells it to select from a fixed set.</p>
+<h3 id="layer-3-post-extraction-path-validation"><a class="anchor" href="#layer-3-post-extraction-path-validation" aria-label="Link to section">#</a>Layer 3: Post-extraction path validation</h3>
+<p>After the LLM extracts raw diagnostic paths, <code>DiagnosticPathValidator</code> runs every path through:</p>
+<ul><li class="depth-0">Placeholder detection: <code>{hostname}</code>, <code>{db_name}</code>, etc. are flagged.</li><li class="depth-0">Glob detection: paths containing <code>*</code> or <code>?</code> are flagged.</li><li class="depth-0">Template detection: paths with parenthesized fragments are flagged.</li></ul>
+<p>Invalid paths are logged and excluded from persistence. The system never stores a hallucinated path in <code>AHFDT_BUG_DIAGNOSTICS</code> unchecked.</p>
+<h3 id="layer-4-srdc-existence-verification"><a class="anchor" href="#layer-4-srdc-existence-verification" aria-label="Link to section">#</a>Layer 4: SRDC existence verification</h3>
+<p>DiagAdvisor retrieves SRDC candidates from <strong>AHFDB/AIDB</strong> — the only SRDCs that exist in those stores are real, validated SRDCs loaded by the platform team. The model never generates an SRDC name from scratch; it retrieves from a known set. This architectural choice eliminates an entire category of hallucination.</p>
+<h3 id="layer-5-json-schema-validation-and-fallback"><a class="anchor" href="#layer-5-json-schema-validation-and-fallback" aria-label="Link to section">#</a>Layer 5: JSON schema validation and fallback</h3>
+<p>All LLM outputs are parsed through <code>JsonUtils.get_json_object()</code>. If the model returns malformed JSON, non-JSON prose, or a response with missing required fields:</p>
+<ul><li class="depth-0">The parse fails gracefully.</li><li class="depth-0">An error is logged.</li><li class="depth-0">The workflow falls back to a safe default (empty result, generic command, or retry).</li></ul>
+<p>The system never crashes or produces corrupt DB state because of a bad model response.</p>
+<h2 id="the-overall-philosophy"><a class="anchor" href="#the-overall-philosophy" aria-label="Link to section">#</a>The overall philosophy</h2>
+<blockquote>&quot;In production AI systems, assume the model will occasionally be wrong. Build every layer of your pipeline to tolerate that, contain it, and recover from it gracefully.&quot;</blockquote>
+<p>That is exactly what DCA does. The model is trusted to handle <strong>semantic ambiguity and natural language understanding</strong>. Every other decision — path validity, SRDC existence, collection coverage — is handled by deterministic code or database lookups.</p>
+<h2 id="what-to-say-in-an-interview"><a class="anchor" href="#what-to-say-in-an-interview" aria-label="Link to section">#</a>What to say in an interview</h2>
+<blockquote>&quot;We handle hallucinations at multiple layers. First, prompts are strict: JSON only, no invention, extract only what's in the source. Second, for keyword normalization the model is given a closed vocabulary — it can only pick from known SRDC keywords. Third, all file paths extracted by the model go through a deterministic validator that filters placeholders, globs, and invalid templates. Fourth, SRDC selection is retrieval-based from a curated store, so the model cannot invent an SRDC name. Fifth, all LLM outputs are parsed and schema-checked; malformed responses trigger a safe fallback, not a crash.&quot;</blockquote>
+<p>---</p>
+<h1 id="16-scale-processing-millions-of-bugs-in-diaggenerator"><a class="anchor" href="#16-scale-processing-millions-of-bugs-in-diaggenerator" aria-label="Link to section">#</a>16. Scale: Processing Millions of Bugs in DiagGenerator</h1>
+<blockquote><strong>Interview Question:</strong> &quot;Suppose you have lakhs of bugs — how does DiagGenerator process those for regex generation?&quot;</blockquote>
+<p>This question tests whether you understand the operational mechanics of DiagGenerator beyond just the happy path.</p>
+<h2 id="the-core-challenge"><a class="anchor" href="#the-core-challenge" aria-label="Link to section">#</a>The core challenge</h2>
+<p>If DiagGenerator had to process 100,000+ bugs (a realistic historical corpus) in a single run:</p>
+<ul><li class="depth-0">LLM calls are expensive: each bug requires at least one call for keyword/path extraction and one for AHF Web/DevShell mining.</li><li class="depth-0">DB queries need to be efficient: fetching 100,000 bug descriptions row by row is slow.</li><li class="depth-0">Memory must be managed: you cannot hold the entire bug corpus in RAM.</li><li class="depth-0">The system must be resumable: if it fails at bug #50,000, restarting from scratch wastes resources.</li></ul>
+<h2 id="how-diaggenerator-handles-this"><a class="anchor" href="#how-diaggenerator-handles-this" aria-label="Link to section">#</a>How DiagGenerator handles this</h2>
+<h3 id="1-date-range-windowed-chunking"><a class="anchor" href="#1-date-range-windowed-chunking" aria-label="Link to section">#</a>1. Date-range windowed chunking</h3>
+<p>DiagGenerator does not process all bugs in one shot. Even in backlog mode, it splits the historical window into chunks of at most <code>MAX_CHUNK_DAYS = 30</code> days. So a 365-day backlog becomes roughly 12 sequential chunks of 30 days each.</p>
+<pre><code class="language-text">backlog window: 365 days
+       │
+       ▼
+chunk 1: days 1–30
+chunk 2: days 31–60
+...
+chunk 12: days 331–365</code></pre>
+<p>Within each chunk, only the bugs modified or created in that window are fetched. This keeps query result sizes manageable.</p>
+<h3 id="2-job-tracker-checkpointing"><a class="anchor" href="#2-job-tracker-checkpointing" aria-label="Link to section">#</a>2. Job tracker checkpointing</h3>
+<p><code>AHFDT_JOB_TRACKER</code> stores the last successful run date. If the system crashes mid-processing, the next run resumes from the last checkpoint rather than restarting at day 1. This is critical for processing large historical backlogs reliably.</p>
+<pre><code class="language-text">Run 1: processes days 1–30. Saves checkpoint: &quot;last_success = day 30&quot;.
+Run 2: resumes from day 31.
+...</code></pre>
+<h3 id="3-per-bug-llm-call-batching-and-error-isolation"><a class="anchor" href="#3-per-bug-llm-call-batching-and-error-isolation" aria-label="Link to section">#</a>3. Per-bug LLM call batching and error isolation</h3>
+<p>Each bug is processed independently. If the LLM call for one bug fails (timeout, rate limit, bad response), only that bug is skipped — the loop continues with the next one. This is error isolation at the unit level.</p>
+<p>In practice this means the system never fails the entire batch because of one bad bug or one transient LLM API error.</p>
+<h3 id="4-clob-reading-in-chunks"><a class="anchor" href="#4-clob-reading-in-chunks" aria-label="Link to section">#</a>4. CLOB reading in chunks</h3>
+<p>For DevShell history, which can be megabytes per bug, the code reads the CLOB in <code>CHUNK_SIZE = 65536</code> byte chunks and accumulates text progressively. This prevents out-of-memory errors when processing bugs with large diagnostic histories.</p>
+<h3 id="5-persistence-strategy-insert-then-update"><a class="anchor" href="#5-persistence-strategy-insert-then-update" aria-label="Link to section">#</a>5. Persistence strategy: insert-then-update</h3>
+<p>For each bug, <code>persist_json_in_ahfdb()</code> tries an INSERT first. If a row already exists (integrity constraint), it falls back to UPDATE. This means re-running DiagGenerator over the same window is idempotent — it updates existing records rather than duplicating them.</p>
+<h3 id="6-problem-json-aggregation-is-a-separate-pass"><a class="anchor" href="#6-problem-json-aggregation-is-a-separate-pass" aria-label="Link to section">#</a>6. Problem JSON aggregation is a separate pass</h3>
+<p><code>create_problem_json()</code> runs as a distinct, aggregation-only step after individual bug records are persisted. It reads from <code>AHFDT_BUG_DIAGNOSTICS</code> and merges keyword/diagnostic frequencies across all bugs in a problem type. Because it reads already-persisted data rather than re-calling the LLM, it is fast and can handle any number of bugs.</p>
+<h2 id="for-regex-generation-specifically"><a class="anchor" href="#for-regex-generation-specifically" aria-label="Link to section">#</a>For regex generation specifically</h2>
+<p>Regex metadata generation (<code>generate_regex_metadata.py</code>) works on <strong>already-stored diagnostic paths</strong>, not raw bugs. By the time regex metadata is generated:</p>
+<ol><li class="depth-0">All bugs have been processed by the LLM.</li><li class="depth-0">Paths have been validated and stored in <code>AHFDT_BUG_DIAGNOSTICS</code>.</li><li class="depth-0"><code>generate_regex_metadata.py</code> reads those stored paths and tokenizes them for Lucene indexing.</li></ol>
+<p>This means regex generation is a <strong>post-processing step over structured DB data</strong>, not a real-time LLM-driven step. It can be run as a batch job over the full history of stored diagnostics without any LLM involvement, making it fast and scalable.</p>
+<h3 id="scale-math-for-context"><a class="anchor" href="#scale-math-for-context" aria-label="Link to section">#</a>Scale math for context</h3>
+<div class="table-wrap"><table><thead><tr><th>Scenario</th><th>Estimate</th></tr></thead><tbody><tr><td>1 LLM call per bug</td><td>100,000 bugs = ~100,000 API calls</td></tr><tr><td>At 1 call/second</td><td>~28 hours of raw LLM time</td></tr><tr><td>With 30-day chunking + daily scheduler</td><td>Spread across 12+ days; 1 day's new bugs ≈ manageable daily batch</td></tr><tr><td>Regex metadata generation (post-LLM)</td><td>Pure SQL + tokenization; handles millions of paths cheaply</td></tr></tbody></table></div>
+<p>The system is designed for the steady-state case (daily incremental) to be fast, and for the one-time backlog case to be resumable and chunked.</p>
+<h2 id="what-to-say-in-an-interview-1"><a class="anchor" href="#what-to-say-in-an-interview-1" aria-label="Link to section">#</a>What to say in an interview</h2>
+<blockquote>&quot;DiagGenerator handles scale through several mechanisms. First, it never processes all bugs at once — it uses date-range chunking of up to 30 days per window, so even a year's backlog becomes 12 manageable chunks. Second, job tracker checkpointing means a crash doesn't require starting from scratch. Third, each bug is processed independently, so one LLM failure doesn't abort the batch. Fourth, CLOB data is read in fixed-size chunks to avoid memory spikes. Fifth, regex metadata generation is a separate post-processing step over already-stored structured data — it doesn't involve LLM calls at all, so it scales cheaply.&quot;</blockquote>
+<p>---</p>
+<h1 id="17-diaggenerator-run-frequency--scheduling"><a class="anchor" href="#17-diaggenerator-run-frequency--scheduling" aria-label="Link to section">#</a>17. DiagGenerator Run Frequency &amp; Scheduling</h1>
+<blockquote><strong>Interview Question:</strong> &quot;How often do we run DiagGenerator?&quot;</blockquote>
+<h2 id="two-modes-two-frequencies"><a class="anchor" href="#two-modes-two-frequencies" aria-label="Link to section">#</a>Two modes, two frequencies</h2>
+<p>DiagGenerator has two distinct operational modes controlled by the <code>schedular</code> flag and the job tracker state.</p>
+<h3 id="daily-mode-steady-state"><a class="anchor" href="#daily-mode-steady-state" aria-label="Link to section">#</a>Daily mode (steady state)</h3>
+<p>Once the historical backlog is processed, DiagGenerator runs in <strong>daily mode</strong>. It processes only bugs from the last rolling day-sized window since the last successful checkpoint.</p>
+<ul><li class="depth-0"><strong>Trigger:</strong> Scheduled job (cron or Oracle AHF job scheduler).</li><li class="depth-0"><strong>Frequency:</strong> Once per day, typically during off-peak hours.</li><li class="depth-0"><strong>Window:</strong> ~1 day of new/updated bugs.</li><li class="depth-0"><strong>Volume:</strong> In most environments, this means tens to a few hundred bugs per day.</li><li class="depth-0"><strong>LLM cost:</strong> Low — only new bugs need processing.</li></ul>
+<h3 id="backlog-mode-initial-bootstrap-or-recovery"><a class="anchor" href="#backlog-mode-initial-bootstrap-or-recovery" aria-label="Link to section">#</a>Backlog mode (initial bootstrap or recovery)</h3>
+<p>If no recent checkpoint exists (first run ever, or long gap due to failure), DiagGenerator switches to <strong>backlog mode</strong>.</p>
+<ul><li class="depth-0"><strong>Trigger:</strong> Absence of a recent <code>last_success_run_date</code> in <code>AHFDT_JOB_TRACKER</code>.</li><li class="depth-0"><strong>Lookback:</strong> Up to 365 days (<code>HISTORICAL_LOOKBACK_DAYS = 365</code>).</li><li class="depth-0"><strong>Chunking:</strong> Broken into 30-day sub-windows (<code>MAX_CHUNK_DAYS = 30</code>).</li><li class="depth-0"><strong>Resumable:</strong> Each chunk updates the checkpoint, so recovery mid-backlog is safe.</li></ul>
+<pre><code class="language-text">            AHFDT_JOB_TRACKER
+                   │
+     ┌─────────────┴─────────────┐
+     │ last_success recent?       │
+     │                           │
+    Yes                         No
+     │                           │
+   Daily mode                Backlog mode
+   (1-day window)            (up to 365d, chunked)</code></pre>
+<p><strong>Figure 6 — DiagGenerator scheduling decision tree</strong></p>
+<h2 id="job-tracker-states"><a class="anchor" href="#job-tracker-states" aria-label="Link to section">#</a>Job Tracker states</h2>
+<div class="table-wrap"><table><thead><tr><th>State</th><th>Meaning</th></tr></thead><tbody><tr><td><code>RUNNING</code></td><td>A job is currently executing; prevents concurrent runs.</td></tr><tr><td><code>SUCCESS</code></td><td>Last run completed cleanly; checkpoint updated.</td></tr><tr><td><code>FAILED</code></td><td>Last run failed; error message stored; next run will retry from last good checkpoint.</td></tr></tbody></table></div>
+<h2 id="what-triggers-a-run-in-practice"><a class="anchor" href="#what-triggers-a-run-in-practice" aria-label="Link to section">#</a>What triggers a run in practice?</h2>
+<p>In Oracle's AHF platform, DiagGenerator is typically triggered by a platform-level job scheduler. The <code>schedular=true</code> flag is passed when the job is invoked this way. If invoked manually (e.g., for testing or backfill), <code>schedular=false</code> can be passed along with explicit <code>start_date</code>, <code>end_date</code>, or a <code>bugs</code> list.</p>
+<h2 id="why-daily-frequency-makes-sense"><a class="anchor" href="#why-daily-frequency-makes-sense" aria-label="Link to section">#</a>Why daily frequency makes sense</h2>
+<ul><li class="depth-0">Bug data accumulates incrementally; daily processing keeps the knowledge base fresh.</li><li class="depth-0">LLM API costs are proportional to volume; processing only new bugs daily is cost-efficient.</li><li class="depth-0">The reflection and impact prediction steps involve multiple LLM calls per bug; batching them nightly avoids latency impact on interactive workflows like DiagAdvisor.</li></ul>
+<h2 id="what-to-say-in-an-interview-2"><a class="anchor" href="#what-to-say-in-an-interview-2" aria-label="Link to section">#</a>What to say in an interview</h2>
+<blockquote>&quot;DiagGenerator runs in two modes. In steady state, it runs once daily, processing only bugs from the last day's window as tracked by a job tracker checkpoint in <code>AHFDT_JOB_TRACKER</code>. On initial bootstrap or after a long gap, it enters backlog mode, which processes up to 365 days of history in 30-day chunks. Each chunk updates the checkpoint, so the system is fully resumable if a run fails partway through.&quot;</blockquote>
+<p>---</p>
+<h1 id="18-knowledge-check-questions-27"><a class="anchor" href="#18-knowledge-check-questions-27" aria-label="Link to section">#</a>18. Knowledge Check Questions (27)</h1>
+<p>Below are practice questions arranged from straightforward to advanced. The answers are intentionally compact enough to revise quickly, but detailed enough to use in deep technical discussions.</p>
+<details>
+<summary>1. What is the DCA project in one sentence?</summary>
+<p>DCA is a diagnostics intelligence suite that transforms bug data, support request context, and free-form problem descriptions into structured diagnostic knowledge, recommended TFA collection commands, validation decisions, and collection coverage checks.</p>
+</details>
+<details>
+<summary>2. What are the main workflows in this directory?</summary>
+<p>The four main workflows are <code>DiagGenerator</code>, <code>DiagAdvisor</code>, <code>Validator</code>, and <code>DiagChecker</code>. Generator creates structured knowledge, Advisor suggests commands, Validator checks whether existing collections are enough, and Checker verifies requested files or commands against bug collections.</p>
+</details>
+<details>
+<summary>3. Where exactly is AI used in this codebase?</summary>
+<p>AI is used in strict JSON extraction, description validation, summarization, entity extraction, keyword normalization, embedding generation, hybrid retrieval, impact/symptom ranking, and reflection. But final operational decisions are often validated via deterministic DB checks and regex/path logic.</p>
+</details>
+<details>
+<summary>4. How does DiagGenerator use an LLM?</summary>
+<p>It sends bug description text and comments to a strict prompt that extracts keywords and raw diagnostic file paths as JSON. It also sends AHF Web / DevShell diagnostic text to a second strict prompt that extracts raw file paths into <code>ahf_web</code> and <code>devshell</code> arrays.</p>
+</details>
+<details>
+<summary>5. Why is the word "strict" repeated in prompts?</summary>
+<p>Because the project needs reliable machine-readable output. The prompts explicitly forbid normalization, inference, extra explanation, or unstructured prose. That reduces hallucination risk and simplifies DB persistence.</p>
+</details>
+<details>
+<summary>6. How does DiagAdvisor choose an SRDC command?</summary>
+<p>It validates the description, summarizes it if token limits require, extracts entities, maps broad keywords to canonical SRDC keywords, embeds the summary, performs hybrid retrieval over stored SRDC summaries, and returns a <code>tfactl diagcollect -srdc ...</code> command if a strong candidate exists. Otherwise it falls back to impact/symptom prediction.</p>
+</details>
+<details>
+<summary>7. What is hybrid retrieval in this project?</summary>
+<p>Hybrid retrieval means the system does not rely only on embedding similarity. It combines vector similarity with lexical evidence such as Oracle error codes and canonical keywords. In the SQL, this appears as <code>similarity</code>, <code>keyword_score</code>, and <code>error_score</code>.</p>
+</details>
+<details>
+<summary>8. Why not use pure vector search only?</summary>
+<p>Because support diagnostics contain precise symbolic evidence like ORA codes, CRS codes, and specific event names. Those signals should strongly influence ranking. Hybrid retrieval keeps that precision while retaining semantic flexibility.</p>
+</details>
+<details>
+<summary>9. What does ImpactSymptomPrediction do?</summary>
+<p>It predicts top category/impact pairs for a bug or description. It summarizes text, generates embeddings, retrieves nearby impact/symptom vectors, asks an LLM to rank top candidates, and then performs a reflection pass to refine summary, root cause, and rankings.</p>
+</details>
+<details>
+<summary>10. What is the reflection step and why is it useful?</summary>
+<p>After initial ranking, the project makes a second LLM call to review the first output, identify the likely root cause, refine the summary, and improve rank ordering. This improves coherence and acts like a self-review stage.</p>
+</details>
+<details>
+<summary>11. How does Validator differ from DiagAdvisor?</summary>
+<p>DiagAdvisor answers &quot;what collection should I run?&quot; Validator answers &quot;do I already have enough logs or collections in this workspace?&quot; It uses Advisor for recommendation, then deterministically checks existing attachments and collection names.</p>
+</details>
+<details>
+<summary>12. How does Validator find the SR description?</summary>
+<p>It looks in the workspace directory for the latest matching XML file, using an epoch extracted from the filename. Then it extracts the content inside <code>&lt;SRDescription_c&gt;</code>. If that fails, it falls back to the description provided in the payload.</p>
+</details>
+<details>
+<summary>13. What does AttachmentProcessor check?</summary>
+<p>It inspects attachment names, separates TFA collections from non-TFA files, extracts SRDC names from TFA zip naming patterns, groups them by host, and decides whether the suggested SRDC collection already exists across all hosts.</p>
+</details>
+<details>
+<summary>14. What is DiagChecker's role?</summary>
+<p>DiagChecker handles bug-based or on-demand requests asking whether certain evidence already exists. It classifies the request into file or command mode, then either checks file presence directly or uses embedding search to match command-like intent to known diagnostic outputs.</p>
+</details>
+<details>
+<summary>15. How does DiagChecker use AI?</summary>
+<p>First, an LLM categorizes user intent as file-oriented or command-oriented. Second, for command-oriented requests, embeddings are used to retrieve likely diagnostic commands from stored summary docs. Final verification still depends on DB-backed file presence checks.</p>
+</details>
+<details>
+<summary>16. Why is QueryMapper a good design?</summary>
+<p>It centralizes SQL registration and lookup by DB category, keeps workflow code cleaner, and supports cached query retrieval. This reduces duplication and makes query ownership explicit.</p>
+</details>
+<details>
+<summary>17. How does the scheduler in DiagGenerator work?</summary>
+<p>When <code>schedular=true</code>, it loads the job tracker row, derives a processing window, and chooses between backlog mode and daily mode. It writes RUNNING status before processing, and updates SUCCESS or FAILED with checkpoint metadata after execution.</p>
+</details>
+<details>
+<summary>18. What is the difference between backlog mode and daily mode?</summary>
+<p>Backlog mode is used when no recent successful checkpoint exists. It starts as far back as 365 days and processes in chunks up to 30 days. Daily mode is used when the tracker is up to date and processes a smaller rolling day-sized window.</p>
+</details>
+<details>
+<summary>19. Why validate diagnostic paths after LLM extraction?</summary>
+<p>Because path extraction is safety-sensitive. The model may output placeholders, globs, or invalid templates. <code>DiagnosticPathValidator</code> filters and records invalid patterns, which is safer than trusting the model blindly.</p>
+</details>
+<details>
+<summary>20. What is `ProblemJson`?</summary>
+<p>It is an aggregation object that merges keywords and diagnostics across many bugs belonging to a problem type. The result is a reusable problem-level JSON containing keyword frequencies and diagnostic file frequencies.</p>
+</details>
+<details>
+<summary>21. Why does DescriptionProcessor summarize only when needed?</summary>
+<p>Because summarization can lose detail. The code estimates token usage and only summarizes when the text would exceed a safe embedding token threshold. That preserves fidelity for shorter descriptions while still protecting the embedding stage.</p>
+</details>
+<details>
+<summary>22. Why store SRDC summaries and embeddings in AIDB?</summary>
+<p>Because SRDC recommendation is fundamentally a retrieval problem. Storing descriptions, keywords, errors, and embeddings in a searchable store enables fast semantic matching across many known collection types.</p>
+</details>
+<details>
+<summary>23. What makes this project production-grade rather than a demo?</summary>
+<p>Several things: audit persistence, DB-backed state tracking, deterministic fallback logic, strict JSON extraction, prompt modularity, validators after AI output, hybrid retrieval instead of naive RAG, and request trackers for checker flows.</p>
+</details>
+<details>
+<summary>24. If you had to improve this project, what would you do next?</summary>
+<p>I would add stronger confidence calibration and routing thresholds, expand document search for attachment coverage, improve observability dashboards around audit data, add more typed schemas and validation around model outputs, and unify some repeated embedding / retrieval patterns across modules.</p>
+</details>
+<details>
+<summary>25. How do you handle hallucinations in this system?</summary>
+<p>At five layers: (1) strict prompts forbid invention and require exact extraction only; (2) keyword normalization uses a closed known-vocabulary list; (3) extracted paths go through DiagnosticPathValidator which filters placeholders, globs, and templates; (4) SRDC recommendation is retrieval-based from a curated store, not free generation; (5) all LLM outputs are JSON-parsed and schema-validated — malformed responses trigger safe fallback, not a crash.</p>
+</details>
+<details>
+<summary>26. How does DiagGenerator scale to process lakhs of bugs?</summary>
+<p>Through date-range chunking (max 30 days per window), job tracker checkpointing for resumability, per-bug error isolation so one failure doesn't abort the batch, CLOB reading in 64KB chunks, idempotent insert-then-update persistence, and a separate aggregation pass for ProblemJson that reads from already-stored data without additional LLM calls.</p>
+</details>
+<details>
+<summary>27. How often does DiagGenerator run and what decides the window?</summary>
+<p>In steady state it runs once daily, processing only the last day's new/updated bugs based on the job tracker checkpoint. On first run or after a failure gap, it enters backlog mode, processing up to 365 days of history in 30-day chunks, with each chunk saved as a checkpoint for recovery.</p>
+</details>
+<p>---</p>
+<h1 id="19-quick-revision-sheet"><a class="anchor" href="#19-quick-revision-sheet" aria-label="Link to section">#</a>19. Quick Revision Sheet</h1>
+<h2 id="10-second-summary"><a class="anchor" href="#10-second-summary" aria-label="Link to section">#</a>10-second summary</h2>
+<ul><li class="depth-0">✅ DCA is a diagnostics intelligence suite, not a single script.</li><li class="depth-0">✅ Generator creates structured knowledge from bugs.</li><li class="depth-0">✅ Advisor maps descriptions to TFA SRDC commands.</li><li class="depth-0">✅ Validator checks whether collections already exist.</li><li class="depth-0">✅ Checker classifies requests and verifies collection coverage.</li></ul>
+<h2 id="ai-concepts-to-mention-naturally"><a class="anchor" href="#ai-concepts-to-mention-naturally" aria-label="Link to section">#</a>AI concepts to mention naturally</h2>
+<ul><li class="depth-0">✅ Strict prompt-based JSON extraction (zero-shot / few-shot)</li><li class="depth-0">✅ Embeddings with <code>cohere.embed-english-v3.0</code></li><li class="depth-0">✅ Hybrid retrieval: vector + error code + keyword signals</li><li class="depth-0">✅ Entity extraction and keyword normalization (closed vocabulary)</li><li class="depth-0">✅ Reflection-based refinement in impact prediction</li><li class="depth-0">✅ Token-aware adaptive summarization</li><li class="depth-0">✅ RAG: structured, constrained, retrieval-grounded generation</li><li class="depth-0">✅ LLM-as-ranker for impact/symptom candidates</li><li class="depth-0">✅ AI + deterministic validator pattern throughout</li></ul>
+<h2 id="hallucination-defense-layers-memorize-these-5"><a class="anchor" href="#hallucination-defense-layers-memorize-these-5" aria-label="Link to section">#</a>Hallucination defense layers (memorize these 5)</h2>
+<ol><li class="depth-0">Strict prompt: JSON only, no invention, exact extraction.</li><li class="depth-0">Closed vocabulary: keyword normalization from known SRDC keyword list.</li><li class="depth-0">Path validator: filters placeholders, globs, templates post-extraction.</li><li class="depth-0">Retrieval-based SRDC: model retrieves from curated store, cannot invent names.</li><li class="depth-0">JSON schema validation + safe fallback on parse failure.</li></ol>
+<h2 id="scale-levers-in-diaggenerator-memorize-these-5"><a class="anchor" href="#scale-levers-in-diaggenerator-memorize-these-5" aria-label="Link to section">#</a>Scale levers in DiagGenerator (memorize these 5)</h2>
+<ol><li class="depth-0">30-day date-range chunking for backlog processing.</li><li class="depth-0">Job tracker checkpointing for crash recovery.</li><li class="depth-0">Per-bug error isolation in processing loop.</li><li class="depth-0">CLOB reading in 64KB chunks.</li><li class="depth-0">Regex metadata generation is post-LLM, DB-only — cheap and fast.</li></ol>
+<h2 id="file-names-to-remember"><a class="anchor" href="#file-names-to-remember" aria-label="Link to section">#</a>File names to remember</h2>
+<ul><li class="depth-0"><code>DiagGenerator.py</code></li><li class="depth-0"><code>diag_advisor/diag_advisor.py</code></li><li class="depth-0"><code>diag_validator/validator.py</code></li><li class="depth-0"><code>diag_checker/DiagChecker.py</code></li><li class="depth-0"><code>ImpactSymptomPrediction.py</code></li><li class="depth-0"><code>manager/db_manager.py</code> and <code>manager/prompt_manager.py</code></li><li class="depth-0"><code>validation_util/generate_regex_metadata.py</code></li></ul>
+<h2 id="if-someone-asks"><a class="anchor" href="#if-someone-asks" aria-label="Link to section">#</a>If someone asks...</h2>
+<div class="table-wrap"><table><thead><tr><th>Question</th><th>Your concise answer</th></tr></thead><tbody><tr><td>&quot;What's the business value?&quot;</td><td>It shortens the path from messy support input to the right diagnostic action or knowledge artifact.</td></tr><tr><td>&quot;What's technically impressive?&quot;</td><td>Hybrid retrieval, strict JSON extraction, AI-plus-validator design, multi-DB orchestration, and multi-layer hallucination defense.</td></tr><tr><td>&quot;What's the hardest part?&quot;</td><td>Balancing semantic flexibility from AI with deterministic production-safe outputs.</td></tr><tr><td>&quot;Why is it not just RAG?&quot;</td><td>Because it is not just retrieving docs; it validates, normalizes, predicts, persists, and operationalizes diagnostic decisions.</td></tr><tr><td>&quot;How do you handle hallucinations?&quot;</td><td>Five layers: strict prompts, closed vocabulary, path validation, retrieval-based SRDC, and schema-checked JSON parsing with safe fallback.</td></tr><tr><td>&quot;How does it scale?&quot;</td><td>Chunked date windows, job tracker checkpointing, per-bug error isolation, CLOB chunking, and separate post-LLM aggregation pass.</td></tr><tr><td>&quot;How often does it run?&quot;</td><td>Daily in steady state; backlog mode on first run or recovery, chunked in 30-day windows over up to 365 days.</td></tr></tbody></table></div>
+<blockquote><strong>Final preparation advice</strong>  <br>If you can explain Figures 1–6, describe where AI is used and where deterministic checks are used, walk through the five hallucination defense layers, explain how 100K bugs get processed in chunked windows, and trace one example from description → SRDC command, you will sound like someone who truly understands this codebase end to end — not just someone who read the code, but someone who built it and thought hard about why every design decision was made.</blockquote>
+    </article>
+    <section class="section-card" id="source-links">
+      <h2 class="section-title">Source Links</h2>
+      <p class="lead">Confluence references used for this updated page. Links are intentionally kept here in the content body rather than in the sidebar.</p>
+      <div class="source-grid">
+  <article class="source-card">
+    <div class="source-head">
+      <h3>TFA AI Projects Progress Tracking</h3>
+      <span>Oracle Restricted</span>
+    </div>
+    <p class="source-meta">Last updated 2025-12-09</p>
+    <ul><li>Confirms DCA as Diagnostics Collection Assistant.</li><li>Tracks DiagGenerator, DiagChecker, DiagAdvisor, and DiagRequester workstreams.</li><li>Records the Generator target release as 26.1.0 and associates the work with TFA-23663, with prompt design, DevShell/AHF Web history capture, status-30 comments, validation, DB tables, and stage E2E testing.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=17160076464">Open Confluence source</a>
+  </article>
+
+  <article class="source-card">
+    <div class="source-head">
+      <h3>AHF AI Advisor - MVP Delivery Plan</h3>
+      <span>Oracle Restricted</span>
+    </div>
+    <p class="source-meta">Last updated 2025-09-16</p>
+    <ul><li>Frames AHF AI Advisor as an initiative to transform diagnostic collection, compliance assessment, and root-cause analysis.</li><li>Positions DCA under optimization of diagnostic collection accuracy and usage.</li><li>Describes the target behavior: query collection contents, detect whether requested diagnostics already exist, and feed missing diagnostics back into the collection driver.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=16660091762">Open Confluence source</a>
+  </article>
+
+  <article class="source-card">
+    <div class="source-head">
+      <h3>Diag AI Reviews</h3>
+      <span>Oracle Internal</span>
+    </div>
+    <p class="source-meta">Last updated 2026-02-17</p>
+    <ul><li>Contains ECS and DBaaSTools review examples where Diag AI output is evaluated against actual bugs.</li><li>Examples cover provisioning, infrapatching, memory reshape, storage reshape, local storage reshape, CPU reshape, and Data Guard.</li><li>Useful for grounding the guide in real effectiveness/gap review patterns rather than only code structure.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=18913587974">Open Confluence source</a>
+  </article>
+
+  <article class="source-card">
+    <div class="source-head">
+      <h3>Diag AI Business Dashboard</h3>
+      <span>Oracle Restricted</span>
+    </div>
+    <p class="source-meta">Last updated 2026-03-05</p>
+    <ul><li>Defines usage analytics goals for DiagAI: adoption, response quality, failures, latency, backlog tracking, and drill-down by org/area/time range.</li><li>Lists V1/V2 scope split across AHF and CMOS and identifies backend objects such as DBSE_STAT_TFA_PAGEVIEW, DBSE_TRIAGEAI_LLM_STATS, DIAGAI_MERGED_DOCS, and DBSE_AT_FEATURE_FEEDBACKS.</li><li>Adds observability context that complements the audit-table discussion in the local guide.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=19178635574">Open Confluence source</a>
+  </article>
+
+  <article class="source-card">
+    <div class="source-head">
+      <h3>Checklist for On Call (Auto Triage, Diag AI, Bug agent)</h3>
+      <span>Public</span>
+    </div>
+    <p class="source-meta">Last updated 2026-04-21</p>
+    <ul><li>Documents what the on-call team checks for DiagAI availability, generated output, expert-doc usage, and missing sections.</li><li>Names expected DiagAI sections: Problem Overview, Symptoms and Evidence, Timeline, Key Information for Supporting Investigation, Triage Recommendation, and References.</li><li>Describes monitoring signals such as smoke tests, success/failure counts, performance anomalies, consistency anomalies, Ocean alerts, and AutoJira/feedback reports.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=19449305884">Open Confluence source</a>
+  </article>
+
+  <article class="source-card">
+    <div class="source-head">
+      <h3>DIAG-AI@Customer - Feature Proposal and Design Constraints</h3>
+      <span>Oracle Highly Restricted</span>
+    </div>
+    <p class="source-meta">Last updated 2025-12-18</p>
+    <ul><li>Extends the diagnostic assistant concept to customer-side AHF deployments with an AI agent and chat interface.</li><li>Defines two basic modes: automatically driven on-site diagnosis and natural-language interrogation of collection information.</li><li>Captures constraints around LLM access, security, Private Agent Factory, and separate/plugin-style installation.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=18481845560">Open Confluence source</a>
+  </article>
+
+  <article class="source-card">
+    <div class="source-head">
+      <h3>Cloud Stack Collection for Autonomous Diagnostic Collection</h3>
+      <span>Oracle Restricted</span>
+    </div>
+    <p class="source-meta">Last updated 2026-01-20</p>
+    <ul><li>Explains cloud-stack diagnostic collection domains and how scope/resource combinations map to tasks.</li><li>Describes the REST-driven flow, list/check-space/package/upload stages, and CloudStackCollection job.</li><li>Provides implementation context for collection payloads, job-manager tasks, module getters, and test expectations.</li></ul>
+    <a class="source-link" href="https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=10517941622">Open Confluence source</a>
+  </article>
+</div>
+    </section>
+  </main>
+</div>
+<a class="backtop" href="#top" aria-label="Back to top">↑</a>
+<script>
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+  link.addEventListener('click', event => {
+    const id = link.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
+    if (!target) return;
+    event.preventDefault();
+    history.pushState(null, '', '#' + id);
+    target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  });
+});
+const links = Array.from(document.querySelectorAll(".index-links a, .md-content a[href^='#']"));
+const sections = links.map(link => document.querySelector(link.getAttribute("href"))).filter(Boolean);
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    links.forEach(link => link.classList.toggle("active", link.getAttribute("href") === "#" + entry.target.id));
+  });
+}, { rootMargin: "-20% 0px -70% 0px", threshold: 0.01 });
+sections.forEach(section => observer.observe(section));
+</script>
+</body>
+</html>
