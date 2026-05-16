@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EUM Platform Kubernetes Orchestration at Scale | Kanye Repo One-Stop Guide</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f7fb;
+  --paper: #ffffff;
+  --paper-soft: #f9fbff;
+  --ink: #172033;
+  --muted: #5d6b82;
+  --subtle: #8591a6;
+  --line: #dfe5ef;
+  --blue: #2558d6;
+  --blue-2: #e7efff;
+  --teal: #007f7a;
+  --green: #16794c;
+  --amber: #a15c00;
+  --red: #bd3426;
+  --violet: #6251c7;
+  --shadow: 0 18px 55px rgba(23, 32, 51, .12);
+  --radius: 8px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(37, 88, 214, .09), transparent 32rem),
+    linear-gradient(180deg, #fbfcff 0%, var(--bg) 44rem);
+  color: var(--ink);
+  font: 14px/1.72 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+pre {
+  overflow: auto;
+  margin: 14px 0 0;
+  padding: 15px;
+  border: 1px solid #cfdae8;
+  border-radius: 7px;
+  background: #0f1729;
+  color: #e9f1ff;
+  line-height: 1.55;
+  font-size: 12px;
+}
+.topbar {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 22px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  color: #fff;
+  background: linear-gradient(90deg, #173f9f, #2558d6 58%, #007f7a);
+  box-shadow: 0 2px 10px rgba(12, 25, 55, .22);
+}
+.logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  color: #173f9f;
+  background: #fff;
+}
+.topbar strong { font-size: 15px; }
+.topbar span { opacity: .82; font-size: 12px; }
+.progress {
+  position: fixed;
+  top: 52px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  z-index: 60;
+  background: linear-gradient(90deg, #36b37e, #00b8d9, #6554c0);
+}
+.layout { display: grid; grid-template-columns: 292px minmax(0, 1fr); }
+.sidebar {
+  position: sticky;
+  top: 52px;
+  height: calc(100vh - 52px);
+  overflow: auto;
+  padding: 20px 14px 26px;
+  background: rgba(255,255,255,.9);
+  border-right: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+.sidebar h2 {
+  margin: 0 8px 12px;
+  color: var(--subtle);
+  font-size: 11px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.search {
+  width: calc(100% - 16px);
+  margin: 0 8px 16px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  background: #fff;
+}
+.sidebar nav { display: grid; gap: 2px; }
+.sidebar a {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.sidebar a:hover, .sidebar a.active { color: var(--blue); background: var(--blue-2); text-decoration: none; }
+main {
+  width: min(1220px, 100%);
+  margin: 0 auto;
+  padding: 34px 44px 80px;
+}
+.hero {
+  min-height: 530px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
+  gap: 34px;
+  align-items: center;
+  padding: 34px 0 42px;
+}
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--blue);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.pulse {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 0 rgba(22,121,76,.5);
+  animation: pulse 2.2s infinite;
+}
+.hero h1 {
+  margin: 18px 0 14px;
+  color: #101829;
+  font-size: 66px;
+  line-height: .99;
+  letter-spacing: 0;
+}
+.hero p {
+  max-width: 735px;
+  color: var(--muted);
+  font-size: 17px;
+}
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 800;
+}
+.btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+.hero-panel {
+  position: relative;
+  min-height: 404px;
+  padding: 20px;
+  border: 1px solid rgba(37,88,214,.18);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.85);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.hero-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(140deg, rgba(37,88,214,.11), transparent 42%, rgba(0,127,122,.14));
+  pointer-events: none;
+}
+.mini-flow { position: relative; display: grid; gap: 12px; z-index: 1; }
+.mini-step {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 11px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(255,255,255,.94);
+  transform: translateY(8px);
+  opacity: 0;
+  animation: rise .55s ease forwards;
+}
+.mini-step:nth-child(2) { animation-delay: .12s; }
+.mini-step:nth-child(3) { animation-delay: .24s; }
+.mini-step:nth-child(4) { animation-delay: .36s; }
+.mini-step:nth-child(5) { animation-delay: .48s; }
+.mini-step:nth-child(6) { animation-delay: .60s; }
+.mini-step b {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  color: #fff;
+  background: var(--blue);
+}
+.mini-step:nth-child(3) b { background: var(--teal); }
+.mini-step:nth-child(5) b { background: var(--violet); }
+.mini-step span { display: block; color: var(--muted); font-size: 12px; line-height: 1.35; }
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0 34px;
+}
+.stat {
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+.stat strong { display: block; font-size: 24px; line-height: 1; }
+.stat span { color: var(--muted); font-size: 12px; }
+section { margin: 28px 0; scroll-margin-top: 70px; }
+.section-card {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: 0 10px 30px rgba(23,32,51,.05);
+}
+.section-title {
+  margin: 0 0 10px;
+  color: #101829;
+  font-size: 26px;
+  letter-spacing: 0;
+  line-height: 1.18;
+}
+.section-kicker {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 15px;
+}
+.grid { display: grid; gap: 14px; }
+.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-soft);
+}
+.card h3, .card h4 {
+  margin: 0 0 8px;
+  color: #101829;
+  line-height: 1.25;
+}
+.card p, .card li { color: var(--muted); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0 0; }
+.tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--blue-2);
+  color: #173f9f;
+  font-size: 11px;
+  font-weight: 800;
+}
+.tag.green { background: #e4f7ed; color: var(--green); }
+.tag.amber { background: #fff1db; color: var(--amber); }
+.tag.violet { background: #f0edff; color: var(--violet); }
+.macro {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border-left: 4px solid var(--blue);
+  border-radius: 7px;
+  background: #f1f6ff;
+  color: #263858;
+}
+.macro.warning { border-left-color: var(--amber); background: #fff7e6; }
+.macro.success { border-left-color: var(--green); background: #ecfdf3; }
+.macro.danger { border-left-color: var(--red); background: #fff0ee; }
+.diagram {
+  position: relative;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    repeating-linear-gradient(0deg, rgba(37,88,214,.06) 0 1px, transparent 1px 32px),
+    repeating-linear-gradient(90deg, rgba(37,88,214,.05) 0 1px, transparent 1px 32px);
+  overflow: hidden;
+}
+.diagram h3 { margin: 0 0 12px; }
+.diagram-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+.diagram-row.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.box {
+  position: relative;
+  min-height: 96px;
+  padding: 13px;
+  border: 1px solid #cfdae8;
+  border-radius: 7px;
+  background: rgba(255,255,255,.95);
+  box-shadow: 0 8px 20px rgba(23,32,51,.06);
+}
+.box strong { display: block; color: #101829; }
+.box span { display: block; color: var(--muted); font-size: 12px; line-height: 1.35; }
+.box.blue { border-color: rgba(37,88,214,.34); background: #f5f8ff; }
+.box.teal { border-color: rgba(0,127,122,.32); background: #f2fbfa; }
+.box.green { border-color: rgba(22,121,76,.32); background: #f3fbf6; }
+.box.amber { border-color: rgba(161,92,0,.32); background: #fff9ef; }
+.box.violet { border-color: rgba(98,81,199,.32); background: #f8f6ff; }
+.flow-atlas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+.flow-card {
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+.flow-card h3 { margin: 0 0 10px; }
+.flow-path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.flow-node {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 1px solid #cfdae8;
+  border-radius: 7px;
+  background: #f8fbff;
+  color: #253858;
+  font-size: 12px;
+  font-weight: 800;
+}
+.flow-node.store { background: #fff9ef; border-color: rgba(161,92,0,.32); }
+.flow-node.queue { background: #f0edff; border-color: rgba(98,81,199,.32); }
+.flow-node.service { background: #f3fbf6; border-color: rgba(22,121,76,.32); }
+.flow-node.edge { background: #f5f8ff; border-color: rgba(37,88,214,.34); }
+.flow-arrow {
+  width: 24px;
+  height: 2px;
+  position: relative;
+  background: linear-gradient(90deg, var(--blue), var(--teal));
+}
+.flow-arrow::after {
+  content: "";
+  position: absolute;
+  right: -3px;
+  top: -4px;
+  border: 5px solid transparent;
+  border-left-color: var(--teal);
+}
+.flow-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.source-preview {
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(260px, 1.05fr);
+  gap: 16px;
+  align-items: center;
+}
+.source-preview img {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #05070d;
+  box-shadow: 0 12px 32px rgba(23,32,51,.12);
+}
+.check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e4f7ed;
+  color: var(--green);
+  font-weight: 900;
+}
+.connector {
+  height: 32px;
+  position: relative;
+  margin: 2px 0 8px;
+}
+.connector::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 14px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--blue), var(--teal), transparent);
+  background-size: 220% 100%;
+  animation: flowline 2.8s linear infinite;
+}
+.connector::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  top: 9px;
+  border: 6px solid transparent;
+  border-left-color: var(--teal);
+}
+.values-stack {
+  display: grid;
+  gap: 8px;
+  max-width: 780px;
+}
+.layer {
+  display: grid;
+  grid-template-columns: 190px 1fr 74px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+}
+.layer b { color: var(--blue); }
+.layer code {
+  display: inline-block;
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: #f1f5fb;
+}
+.wins { color: var(--green); font-weight: 900; text-align: right; }
+.timeline {
+  position: relative;
+  display: grid;
+  gap: 13px;
+  margin: 18px 0 0;
+}
+.time-step {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 14px;
+  align-items: start;
+}
+.time-step b {
+  position: relative;
+  display: block;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: var(--blue);
+  color: #fff;
+  text-align: center;
+}
+.time-step .body {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+}
+.swimlane {
+  display: grid;
+  grid-template-columns: 140px repeat(5, minmax(90px, 1fr));
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  overflow: hidden;
+  background: #fff;
+}
+.swimlane div { padding: 10px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-height: 52px; }
+.swimlane div:nth-child(6n) { border-right: 0; }
+.swimlane .head { background: #f1f5fb; font-weight: 900; color: #253858; }
+.pod {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 26px;
+  margin: 2px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+}
+.v1 { background: var(--blue); }
+.v2 { background: var(--green); animation: glow 2s ease-in-out infinite; }
+.pending { background: var(--amber); }
+details {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+details + details { margin-top: 10px; }
+summary {
+  cursor: pointer;
+  padding: 13px 15px;
+  font-weight: 900;
+  color: #172033;
+}
+details[open] summary { border-bottom: 1px solid var(--line); background: #f8fbff; }
+.details-body { padding: 14px 16px 16px; color: var(--muted); }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  overflow: hidden;
+}
+th, td { padding: 10px 11px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { background: #f1f5fb; color: #253858; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+tr:last-child td { border-bottom: 0; }
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border: 1px solid #ccd6e3;
+  border-radius: 5px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+.copy {
+  float: right;
+  margin-top: -4px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.hidden { display: none !important; }
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(22,121,76,.52); }
+  70% { box-shadow: 0 0 0 12px rgba(22,121,76,0); }
+  100% { box-shadow: 0 0 0 0 rgba(22,121,76,0); }
+}
+@keyframes rise {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes flowline {
+  0% { background-position: 0 0; }
+  100% { background-position: 220% 0; }
+}
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(22,121,76,0); }
+  50% { box-shadow: 0 0 16px rgba(22,121,76,.35); }
+}
+@media (max-width: 980px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; top: 0; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  .sidebar nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  main { padding: 26px 18px 64px; }
+  .hero { grid-template-columns: 1fr; min-height: auto; }
+  .hero h1 { font-size: 44px; }
+  .stats, .cols-4, .cols-3, .cols-2, .diagram-row, .diagram-row.five, .flow-atlas, .source-preview { grid-template-columns: 1fr; }
+  .layer, .time-step { grid-template-columns: 1fr; }
+  .swimlane { grid-template-columns: 1fr; }
+  .swimlane div { border-right: 0; }
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">E</div>
+  <div>
+    <strong>EUM Platform | Kanye Repo Interview Mastery</strong>
+    <span>Confluence-style one-stop guide for Kubernetes orchestration at scale</span>
+  </div>
+</div>
+<div class="progress" id="progress"></div>
+<div class="layout">
+  <aside class="sidebar">
+    <h2>Page Tree</h2>
+    <input id="sectionSearch" class="search" type="search" placeholder="Filter sections...">
+    <nav id="toc">
+      <a href="#overview">Overview</a>
+      <a href="#source-map">Source Map</a>
+      <a href="#coverage-audit">Coverage Audit</a>
+      <a href="#runtime-architecture">Runtime Architecture</a>
+      <a href="#dfd-source-scan">DFD Source Scan</a>
+      <a href="#service-flows">EUM Service Flows</a>
+      <a href="#orchestration-stack">Kanye Orchestration Stack</a>
+      <a href="#wrapper-pattern">460 Wrapper Pattern</a>
+      <a href="#implementation-map">Implementation Map</a>
+      <a href="#helm">Helm Deployment Mechanics</a>
+      <a href="#multi-region">Multi-Region Configuration</a>
+      <a href="#scaling">Scaling Architecture</a>
+      <a href="#rolling">Zero-Downtime Rolling Deploys</a>
+      <a href="#node-lifecycle">Node Lifecycle</a>
+      <a href="#eks-upgrades">EKS Upgrades</a>
+      <a href="#az-aware">AZ-Aware Scheduling</a>
+      <a href="#istio">Istio Service Mesh</a>
+      <a href="#schema">Schema and Data Safety</a>
+      <a href="#secrets">Secrets Management</a>
+      <a href="#cicd">CI/CD and Versioning</a>
+      <a href="#disaster">Disaster Toolbox</a>
+      <a href="#azure-dfd">Azure DFD Mapping</a>
+      <a href="#interview">Interview Q&A</a>
+      <a href="#closing">Closing Narrative</a>
+    </nav>
+  </aside>
+  <main>
+    <section class="hero" id="overview" data-title="overview mental model">
+      <div>
+        <div class="eyebrow"><span class="pulse"></span> EUM orchestration layer</div>
+        <h1>Kubernetes orchestration at scale for EUM</h1>
+        <p>
+          This page connects the EUM runtime architecture with the Kanye repo operational layer:
+          how browser, mobile, IoT, and synthetic telemetry moves through collectors,
+          aggregation stores, session/event pipelines, and how roughly 60 services are deployed,
+          scaled, drained, upgraded, and recovered across AWS regions.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#orchestration-stack">Start with the stack</a>
+          <a class="btn" href="#interview">Jump to interview Q&A</a>
+          <a class="btn" href="#runtime-architecture">See data flow</a>
+        </div>
+      </div>
+      <div class="hero-panel" aria-label="animated delivery path">
+        <div class="mini-flow">
+          <div class="mini-step"><b>1</b><div><strong>App code publishes artifacts</strong><span>Docker images to ECR and Helm charts to chart storage.</span></div></div>
+          <div class="mini-step"><b>2</b><div><strong>Kanye wrappers expose jobs</strong><span>Each CI entry point sets ENV, REGION, TIER, COMMAND, then delegates.</span></div></div>
+          <div class="mini-step"><b>3</b><div><strong>Helm renders one service</strong><span>Values cascade chooses the right image, limits, probes, secrets, and region overrides.</span></div></div>
+          <div class="mini-step"><b>4</b><div><strong>EKS rolls pods safely</strong><span>RollingUpdate, readiness, PDBs, preStop hooks, and minReadySeconds protect traffic.</span></div></div>
+          <div class="mini-step"><b>5</b><div><strong>HPA and ASG scale</strong><span>Pods scale first, nodes follow when capacity is exhausted.</span></div></div>
+          <div class="mini-step"><b>6</b><div><strong>Runbooks are code</strong><span>Drain, backup, KPL recovery, EKS upgrades, and emergency pod removal are auditable jobs.</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="stats">
+      <div class="stat"><strong>60+</strong><span>EUM microservices and subcharts</span></div>
+      <div class="stat"><strong>460+</strong><span>thin CI wrapper modules</span></div>
+      <div class="stat"><strong>12+</strong><span>AWS regions / EKS clusters</span></div>
+      <div class="stat"><strong>3</strong><span>scaling layers: HPA, ASG, manual</span></div>
+    </div>
+
+    <section class="section-card" id="source-map" data-title="source map files pdf markdown">
+      <h2 class="section-title">Source Map</h2>
+      <p class="section-kicker">This guide is synthesized from the supplied Markdown guide, the pasted orchestration notes, and the two architecture PDFs.</p>
+      <div class="grid cols-3">
+        <div class="card">
+          <h3>Interview guide</h3>
+          <p><code>INTERVIEW_GUIDE.md</code> establishes the Kanye repo mental model, wrappers, Helm, scaling, EKS upgrades, Istio, schema, secrets, CI/CD, and Q&A.</p>
+        </div>
+        <div class="card">
+          <h3>EUM cloud architecture PDF</h3>
+          <p>Grounds the runtime story: collector and aggregator statelessness, minute-bound aggregation, Level One/Level Two stores, GUID tenancy, DynamoDB contention, compression, and deployment.</p>
+        </div>
+        <div class="card">
+          <h3>Azure DFD PDF</h3>
+          <p>Adds modern pipeline components: collector proxy, IoT/synth collectors, Redis L1, S3/Blob L2, SQS/Kafka paths, sessionizer, decorator, symbolicators, Cosmos/Dynamo mapping, and EKS pod counts.</p>
+        </div>
+      </div>
+      <div class="macro">
+        <strong>How to read this:</strong> the runtime architecture explains what EUM is doing with telemetry. The Kanye sections explain how that runtime is safely delivered and operated.
+      </div>
+    </section>
+
+    <section class="section-card" id="coverage-audit" data-title="coverage audit missing checklist markdown pdf dfd">
+      <h2 class="section-title">Coverage Audit: What Was Checked</h2>
+      <p class="section-kicker">Second pass audit against the 1,218-line Markdown guide, the EUM Cloud architecture PDF, and the Azure DFD PDF. The goal is not to paste every word; it is to preserve every interview-relevant concept and flow.</p>
+      <table>
+        <thead><tr><th>Status</th><th>Source area</th><th>Covered where</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><span class="check">ok</span></td><td>Kanye mental model, 460 wrappers, CI job-per-directory</td><td>Wrapper pattern, orchestration stack, CI/CD</td><td>Includes why the pattern exists, trade-offs, prod-deploy shards, and shared implementations.</td></tr>
+          <tr><td><span class="check">ok</span></td><td>Helm umbrella chart, common templates, values cascade, checksums, schema job handling</td><td>Helm Deployment Mechanics</td><td>Includes <code>--reset-values</code>, SOPS, image tags, and Job recreation behavior.</td></tr>
+          <tr><td><span class="check">ok</span></td><td>Scaling, rolling deploys, PDBs, preStop, HPA, ASG lifecycle hooks</td><td>Scaling, Rolling Deploys, Node Lifecycle</td><td>Includes HPA math, JVM warmup rationale, PDB disruption behavior, and graceful node termination.</td></tr>
+          <tr><td><span class="check">ok</span></td><td>EKS upgrades, VPC CNI, AZ drain batching, topology/anti-affinity</td><td>EKS Upgrades, AZ-Aware Scheduling</td><td>Includes version skew, control-plane/add-on/node separation, and round-robin drain batches.</td></tr>
+          <tr><td><span class="check">ok</span></td><td>EUM Cloud collector/aggregator design</td><td>Runtime Architecture</td><td>Includes stateless collectors, one-minute cycles, L1/L2, GUID tenancy, time sync, and optimistic concurrency.</td></tr>
+          <tr><td><span class="check">ok</span></td><td>Azure DFD service paths</td><td>DFD Source Scan, EUM Service Flows, Azure DFD Mapping</td><td>Expanded in this revision with individual flow diagrams for metric, event, crash, session, APM correlation, JS error, Ultron, screenshot, API, browser error, user journey, controller, and license portal.</td></tr>
+          <tr><td><span class="check">ok</span></td><td>Secrets, schema migrations, DynamoDB backups, disaster toolbox</td><td>Secrets, Schema and Data Safety, Disaster Toolbox</td><td>Includes two-phase migration, backup retention concept, KPL recovery, delete pod, recycler, drain, scale, and update jobs.</td></tr>
+        </tbody>
+      </table>
+      <div class="macro success">
+        <strong>Audit result:</strong> the first version did not omit the big orchestration concepts, but it underrepresented the DFD service-level flows. The added flow atlas below closes that gap.
+      </div>
+    </section>
+
+    <section class="section-card" id="dfd-source-scan" data-title="dfd source scan pdf diagram columns service flow">
+      <h2 class="section-title">DFD Source Scan</h2>
+      <p class="section-kicker">The Azure DFD first page contains a large system diagram and columns for each major data flow. I rendered the page and used it, plus extracted PDF text, to rebuild the flows below in readable form.</p>
+      <div class="source-preview">
+        <div>
+          <img src="pdf_pages/eum_dfd.png" alt="Rendered first page of the EUM DFD for Azure PDF">
+        </div>
+        <div class="card">
+          <h3>Flow columns found in the PDF</h3>
+          <div class="tag-row">
+            <span class="tag">Beacon ingest</span>
+            <span class="tag">IoT and Synth collectors</span>
+            <span class="tag">Metric pipeline</span>
+            <span class="tag violet">Event symbolicator</span>
+            <span class="tag violet">Crash symbolicator</span>
+            <span class="tag green">Sessionizer</span>
+            <span class="tag green">APM to EUM correlation</span>
+            <span class="tag amber">JS error flow</span>
+            <span class="tag">Ultron resource snapshots</span>
+            <span class="tag">Screenshot store</span>
+            <span class="tag">API server</span>
+            <span class="tag">Browser error service</span>
+            <span class="tag">User journey map</span>
+            <span class="tag">Controller call</span>
+            <span class="tag">License portal</span>
+          </div>
+          <p>The PDF text also lists cluster details: three pods for many core services, Redis caches, Kafka/Kinesis stream equivalents, SQS queue equivalents, Cosmos/DynamoDB tables, Blob/S3 stores, and affinity rules for collector and collector-proxy.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card" id="runtime-architecture" data-title="runtime architecture collector aggregator pipeline">
+      <h2 class="section-title">Runtime Architecture: What EUM Is Operating</h2>
+      <p class="section-kicker">EUM is a multi-tenant, on-demand telemetry aggregation system. It receives browser/mobile/IoT/synthetic beacons, partitions by account and application GUID, aggregates per minute, and exposes metrics and snapshots for Controllers.</p>
+
+      <div class="diagram">
+        <h3>Beacon to Controller: canonical metric path</h3>
+        <div class="diagram-row five">
+          <div class="box blue"><strong>Browser / Mobile / IoT</strong><span>Agents send JSON beacons over HTTPS/HTTP. Authentication is usually not on the ingest edge; validation happens downstream.</span></div>
+          <div class="box teal"><strong>Collector proxy + ALB</strong><span>Receives global traffic and forwards to the right collector zone.</span></div>
+          <div class="box green"><strong>Collector pods</strong><span>Validate, enrich with geo/user-agent, classify slow/stall, sample snapshots, and create L1 aggregates.</span></div>
+          <div class="box amber"><strong>L1 store</strong><span>Historically S3 Level One; in the DFD, Redis holds one-minute account-level aggregates from each collector pod.</span></div>
+          <div class="box violet"><strong>Aggregator + L2</strong><span>One node wins processing rights per account, merges collector outputs, compresses, and writes final L2 metrics for Controllers.</span></div>
+        </div>
+        <div class="connector"></div>
+        <div class="diagram-row">
+          <div class="box"><strong>Account/App GUID</strong><span>Multi-tenancy is built around globally unique account and application identifiers.</span></div>
+          <div class="box"><strong>DynamoDB / Cosmos</strong><span>Stores account metadata, application keys, configuration, and optimistic concurrency state.</span></div>
+          <div class="box"><strong>S3 / Blob</strong><span>Stores metrics, events, snapshots, source maps, crash reports, and synthetic artifacts with retention windows.</span></div>
+          <div class="box"><strong>Controller download</strong><span>Controllers request the previous minute after applying EUM cloud time skew.</span></div>
+        </div>
+      </div>
+
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>Collector responsibilities</h3>
+          <ul>
+            <li>Receive and validate browser/mobile/IoT/synthetic telemetry.</li>
+            <li>Resolve geo, browser, device, OS, page, AJAX, and classification dimensions.</li>
+            <li>Aggregate in memory by application within the one-minute cycle.</li>
+            <li>Write unique per-collector L1 tuples so no collector overwrites another collector.</li>
+            <li>Keep Jetty request threads decoupled from heavier processing via queues and worker pools.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Aggregator responsibilities</h3>
+          <ul>
+            <li>Wake after the minute boundary and merge all collector tuples for an account/application.</li>
+            <li>Use DynamoDB conditional updates to ensure one aggregator processes one account per minute.</li>
+            <li>Write final L2 metric objects and sampled events/snapshots.</li>
+            <li>Expose Controller APIs for metric download and account/application management.</li>
+            <li>Remain stateless so any pod can process any account in the next cycle.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="diagram">
+        <h3>Collector internals: async three-stage processing</h3>
+        <div class="diagram-row five">
+          <div class="box blue"><strong>Jetty request threads</strong><span>Receive beacons and quickly validate request shape so front-door threads return to accepting traffic.</span></div>
+          <div class="box teal"><strong>Concurrent queue</strong><span>Decouples network IO from enrichment and aggregation work.</span></div>
+          <div class="box green"><strong>Dimension workers</strong><span>Add geo, browser, OS, device, page/AJAX, and slow/stall classification dimensions.</span></div>
+          <div class="box amber"><strong>In-memory app map</strong><span>Merge metrics by application GUID and metric key with synchronization around map creation and value merge.</span></div>
+          <div class="box violet"><strong>Parallel uploader</strong><span>At minute boundary, swap the active map and upload compressed L1 tuples in parallel.</span></div>
+        </div>
+      </div>
+
+      <div class="diagram">
+        <h3>Aggregator internals: ownership, merge, publish</h3>
+        <div class="diagram-row five">
+          <div class="box blue"><strong>Timer wakes T+15s</strong><span>Aggregator waits for collectors to finish the previous minute's L1 writes.</span></div>
+          <div class="box teal"><strong>Read account rows</strong><span>Metadata rows in DynamoDB/Cosmos identify accounts and applications.</span></div>
+          <div class="box green"><strong>Conditional update wins</strong><span>Only one node updates <code>last_updated_time</code> for an account and owns that batch.</span></div>
+          <div class="box amber"><strong>Read all L1 tuples</strong><span>Query by timestamp and application/account prefix, then merge all collector outputs.</span></div>
+          <div class="box violet"><strong>Write L2 and snapshots</strong><span>Compress final metrics/events and expose them for Controller/API reads.</span></div>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div class="time-step"><b>T+00s</b><div class="body"><strong>Collectors close the previous minute.</strong> They swap in-memory stores, continue accepting new traffic, and upload one-minute L1 batches with timestamp rounded to the minute start.</div></div>
+        <div class="time-step"><b>T+15s</b><div class="body"><strong>Aggregators start processing.</strong> Each aggregator competes for account rows using conditional updates. Winners read all L1 tuples for that account/application and merge them.</div></div>
+        <div class="time-step"><b>T+25s</b><div class="body"><strong>Aggregation should be complete.</strong> Final L2 objects are compressed and available for downstream reads.</div></div>
+        <div class="time-step"><b>T+40s</b><div class="body"><strong>Controllers download.</strong> Controllers ask for the previous minute after applying EUM cloud time skew. Clock discipline is part of data integrity.</div></div>
+      </div>
+
+      <div class="macro warning">
+        <strong>Interview signal:</strong> the stateless claim is not hand-wavy. Statelessness works because collector writes are unique, aggregator ownership is protected by conditional metadata updates, and durable state lives in Redis/S3/DynamoDB or their Azure equivalents.
+      </div>
+    </section>
+
+    <section class="section-card" id="service-flows" data-title="eum service flows dfd metric event crash sessionizer decorator js error ultron api">
+      <h2 class="section-title">EUM Service Flow Atlas</h2>
+      <p class="section-kicker">The DFD is dense, so this section breaks it into interview-ready paths. Node color meaning: blue=edge, green=service, violet=queue/stream, amber=store.</p>
+
+      <div class="flow-atlas">
+        <div class="flow-card">
+          <h3>1. Browser and mobile beacon ingest</h3>
+          <div class="flow-path">
+            <span class="flow-node edge">Browser / Mobile Agent</span><span class="flow-arrow"></span>
+            <span class="flow-node edge">Collector-proxy ALB</span><span class="flow-arrow"></span>
+            <span class="flow-node edge">Collector-proxy</span><span class="flow-arrow"></span>
+            <span class="flow-node service">Collector</span><span class="flow-arrow"></span>
+            <span class="flow-node store">L1 Redis / L1 bucket</span>
+          </div>
+          <p class="flow-note">Collector-proxy-controller provides the proxy with the list of collectors in its zone. Collector validates and transforms beacons before downstream fan-out.</p>
+        </div>
+
+        <div class="flow-card">
+          <h3>2. IoT and Synthetic collector flow</h3>
+          <div class="flow-path">
+            <span class="flow-node edge">IoT / Synth / Mobile Agents</span><span class="flow-arrow"></span>
+            <span class="flow-node edge">eum-proxy ALB</span><span class="flow-arrow"></span>
+            <span class="flow-node edge">eum-proxy</span><span class="flow-arrow"></span>
+            <span class="flow-node service">IoT Collector</span><span class="flow-arrow"></span>
+            <span class="flow-node service">Synth Collector</span><span class="flow-arrow"></span>
+            <span class="flow-node queue">Downstream queues</span>
+          </div>
+          <p class="flow-note">The DFD separates IoT and synthetic ingest from browser beacon ingest, but both converge into validation, transformation, and event/metric pipelines.</p>
+        </div>
+
+        <div class="flow-card">
+          <h3>3. Metric pipeline</h3>
+          <div class="flow-path">
+            <span class="flow-node service">Collector</span><span class="flow-arrow"></span>
+            <span class="flow-node store">L1 Metric Store Redis</span><span class="flow-arrow"></span>
+            <span class="flow-node service">Aggregator</span><span class="flow-arrow"></span>
+            <span class="flow-node store">L2 Metric Store S3 / Blob</span><span class="flow-arrow"></span>
+            <span class="flow-node edge">Controller API</span>
+          </div>
+          <p class="flow-note">Collectors store one-minute account-level data. Aggregator merges all collector data for an account into application-level metrics.</p>
+        </div>
+
+        <div class="flow-card">
+          <h3>4. Event symbolicator and grouper</h3>
+          <div class="flow-path">
+            <span class="flow-node service">Collector</span><span class="flow-arrow"></span>
+            <span class="flow-node queue">Event Symbolicator SQS</span><span class="flow-arrow"></span>
+            <span class="flow-node service">Event Symbolicator</span><span class="flow-arrow"></span>
+            <span class="flow-node queue">Event Grouper SQS</span><span class="flow-arrow"></span>
+            <span class="flow-node service">Event Grouper</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Event Snapshot S3</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Event Group DynamoDB</span><span class="flow-arrow"></span>
+            <span class="flow-node store">ES / Event Service</span>
+          </div>
+          <p class="flow-note">This path normalizes and groups mobile/browser events, then persists snapshots and grouped metadata for search and UI retrieval.</p>
+        </div>
+
+        <div class="flow-card">
+          <h3>5. Crash symbolicator and crash grouper</h3>
+          <div class="flow-path">
+            <span class="flow-node service">Collector</span><span class="flow-arrow"></span>
+            <span class="flow-node queue">Crash Symbolicator SQS</span><span class="flow-arrow"></span>
+            <span class="flow-node service">Crash Symbolicator</span><span class="flow-arrow"></span>
+            <span class="flow-node queue">Crash Grouper SQS</span><span class="flow-arrow"></span>
+            <span class="flow-node service">Crash Grouper</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Crash Snapshot S3</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Crash Group DynamoDB</span><span class="flow-arrow"></span>
+            <span class="flow-node queue">Kinesis / Kafka</span><span class="flow-arrow"></span>
+            <span class="flow-node store">ES</span>
+          </div>
+          <p class="flow-note">Crash data needs symbolication, grouping, snapshot persistence, metadata storage, and publication for downstream event views.</p>
+        </div>
+
+        <div class="flow-card">
+          <h3>6. Sessionizer flow</h3>
+          <div class="flow-path">
+            <span class="flow-node service">Collector / Crash Grouper</span><span class="flow-arrow"></span>
+            <span class="flow-node queue">Kinesis / Kafka</span><span class="flow-arrow"></span>
+            <span class="flow-node service">Sessionizer</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Redis Cache</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Publish Event ES</span>
+          </div>
+          <p class="flow-note">Sessionizer stitches records into user sessions. Redis is the working cache; ES/Event Service receives publishable session events.</p>
+        </div>
+
+        <div class="flow-card">
+          <h3>7. APM to EUM correlation</h3>
+          <div class="flow-path">
+            <span class="flow-node service">Sessionizer</span><span class="flow-arrow"></span>
+            <span class="flow-node queue">Kinesis / Kafka</span><span class="flow-arrow"></span>
+            <span class="flow-node service">Decorator</span><span class="flow-arrow"></span>
+            <span class="flow-node service">Correlate API IDs</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Event Service / ES</span>
+          </div>
+          <p class="flow-note">Decorator consumes sessionized output, attaches APM correlation context, and publishes the joined APM/EUM view.</p>
+        </div>
+
+        <div class="flow-card">
+          <h3>8. JS error grouper flow</h3>
+          <div class="flow-path">
+            <span class="flow-node service">Collector</span><span class="flow-arrow"></span>
+            <span class="flow-node queue">JS Error SQS</span><span class="flow-arrow"></span>
+            <span class="flow-node service">JS Error Grouper</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Local cache from DynamoDB</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Stack traces S3</span>
+          </div>
+          <p class="flow-note">The grouper keeps JS error metadata locally from DynamoDB and writes stack traces/source artifacts to object storage.</p>
+        </div>
+
+        <div class="flow-card">
+          <h3>9. Ultron resource snapshot flow</h3>
+          <div class="flow-path">
+            <span class="flow-node service">Collector</span><span class="flow-arrow"></span>
+            <span class="flow-node queue">Ultron SQS</span><span class="flow-arrow"></span>
+            <span class="flow-node service">Ultron Service</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Resource Snapshot S3</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Publish Event ES</span>
+          </div>
+          <p class="flow-note">Ultron reads resource snapshot messages, persists snapshot payloads, and publishes searchable event data.</p>
+        </div>
+
+        <div class="flow-card">
+          <h3>10. Screenshot service and store</h3>
+          <div class="flow-path">
+            <span class="flow-node edge">XLB</span><span class="flow-arrow"></span>
+            <span class="flow-node service">Screenshot Service</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Screenshot Store S3</span>
+          </div>
+          <p class="flow-note">Receives screenshot/image data over HTTP(S) and stores image artifacts in object storage.</p>
+        </div>
+
+        <div class="flow-card">
+          <h3>11. API server read path</h3>
+          <div class="flow-path">
+            <span class="flow-node edge">Controller / XLB</span><span class="flow-arrow"></span>
+            <span class="flow-node service">API Server</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Metric Store S3</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Event Snapshot S3</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Crash Snapshot S3</span><span class="flow-arrow"></span>
+            <span class="flow-node store">dSYM / ProGuard Store</span>
+          </div>
+          <p class="flow-note">API server serves Controller requests for metrics, snapshots, and mobile mapping artifacts.</p>
+        </div>
+
+        <div class="flow-card">
+          <h3>12. Browser error service</h3>
+          <div class="flow-path">
+            <span class="flow-node edge">XLB</span><span class="flow-arrow"></span>
+            <span class="flow-node service">Browser Error Service</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Stack Trace S3</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Source File DynamoDB</span><span class="flow-arrow"></span>
+            <span class="flow-node store">ES</span>
+          </div>
+          <p class="flow-note">Fetches stack trace data, manages source mapping metadata, and publishes browser error events for querying.</p>
+        </div>
+
+        <div class="flow-card">
+          <h3>13. User journey query flow</h3>
+          <div class="flow-path">
+            <span class="flow-node edge">XLB</span><span class="flow-arrow"></span>
+            <span class="flow-node service">User Journey Query</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Session info ES</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Custom Label DynamoDB</span><span class="flow-arrow"></span>
+            <span class="flow-node store">Custom View S3</span>
+          </div>
+          <p class="flow-note">Reads session data for a time window and stores/fetches custom labels and custom user-impact views.</p>
+        </div>
+
+        <div class="flow-card">
+          <h3>14. Controller and license portal calls</h3>
+          <div class="flow-path">
+            <span class="flow-node edge">Controller</span><span class="flow-arrow"></span>
+            <span class="flow-node edge">XLB</span><span class="flow-arrow"></span>
+            <span class="flow-node service">API Server</span><span class="flow-arrow"></span>
+            <span class="flow-node store">L2 metrics / snapshots / mapping files</span>
+          </div>
+          <div class="flow-path" style="margin-top:10px">
+            <span class="flow-node edge">License Portal</span><span class="flow-arrow"></span>
+            <span class="flow-node edge">XLB</span><span class="flow-arrow"></span>
+            <span class="flow-node service">API Server</span><span class="flow-arrow"></span>
+            <span class="flow-node store">EUM license create/update</span>
+          </div>
+          <p class="flow-note">Controller fetches metrics/snapshots and uploads mapping files; the license portal creates and updates EUM license state through the same API tier.</p>
+        </div>
+      </div>
+
+      <div class="macro">
+        <strong>Operational connection:</strong> every service box above is a Helm-managed workload or external managed dependency. Kanye deploys and scales the service pods; AWS/Azure managed services hold the durable state and queue boundaries.
+      </div>
+    </section>
+
+    <section class="section-card" id="orchestration-stack" data-title="kanye orchestration stack ci wrappers helm eks aws">
+      <h2 class="section-title">Kanye Orchestration Stack</h2>
+      <p class="section-kicker">Kanye is the delivery and operations control plane. It is not the service source code; it packages, deploys, scales, upgrades, and recovers the platform.</p>
+
+      <div class="diagram">
+        <h3>Complete delivery stack</h3>
+        <div class="diagram-row">
+          <div class="box blue"><strong>CI trigger layer</strong><span>TeamCity Kotlin DSL plus legacy Jenkins jobs. Parameters: ENV, REGION, TIER, BRANCH, BUILD, COMMAND.</span></div>
+          <div class="box teal"><strong>Wrapper layer</strong><span>Hundreds of tiny directories such as <code>eum-prod-deploy</code>, <code>sum-shadow-autoscale</code>, <code>eum-sydney-drain-node</code>.</span></div>
+          <div class="box green"><strong>Real implementations</strong><span>About ten scripts do the real work: deploy, scale, drain, update EKS, backup DynamoDB, batch instances, delete pods, kill KPL.</span></div>
+          <div class="box violet"><strong>AWS + Kubernetes</strong><span>EKS clusters, Helm releases, HPAs, ASGs, ALBs, DynamoDB, Redis, S3, Kinesis, SQS, and Istio.</span></div>
+        </div>
+      </div>
+
+      <div class="grid cols-3">
+        <div class="card">
+          <h3>Core insight 1</h3>
+          <p>Operations are the same script with different parameters. Encode the parameters in directory names and wrapper environment variables.</p>
+        </div>
+        <div class="card">
+          <h3>Core insight 2</h3>
+          <p>A microservice deploy is <code>helm upgrade --install</code> with the correct values cascade, image tag, secrets file, and kube context.</p>
+        </div>
+        <div class="card">
+          <h3>Core insight 3</h3>
+          <p>Stateful operations need explicit, idempotent tooling because Kubernetes primitives alone do not solve migrations, backups, KPL hangs, or node drains.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card" id="wrapper-pattern" data-title="wrapper pattern ci jobs directories jenkins teamcity">
+      <h2 class="section-title">The 460 Wrapper Pattern</h2>
+      <p class="section-kicker">The repo looks huge because every product/environment/operation gets a small job entry point. The complexity is intentionally pushed into shared implementations.</p>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>Directory grammar</h3>
+          <pre><button class="copy">Copy</button><code>{product}-{env|region}-{operation}
+
+product: eum | sum
+env: bom | cpt | prod | shadow | eucentral1 | sydney | ...
+operation: deploy | schema | backup | autoscale | drain-node |
+           update-eks | kill-kpl | delete-pod | diff | plan</code></pre>
+        </div>
+        <div class="card">
+          <h3>Representative wrapper</h3>
+          <pre><button class="copy">Copy</button><code>#!/bin/bash
+export ENV='bom'
+export PIPELINE='eum'
+
+if [ "${COMMAND}" == "deploy" ]; then
+  cd ../docker/helm/eum
+  ./deploy.sh
+elif [ "${COMMAND}" == "scale" ]; then
+  cd ../docker/scripts
+  ./scale_tier.sh
+fi</code></pre>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Why it exists</th><th>Operational value</th><th>Trade-off</th></tr></thead>
+        <tbody>
+          <tr><td>Job discovery</td><td>CI can scan directories and create independently auditable jobs.</td><td>Many trivial directories.</td></tr>
+          <tr><td>Access control</td><td>Prod, shadow, drain, and schema jobs can have different permissions.</td><td>New operation may require many wrappers.</td></tr>
+          <tr><td>Parallel deployment</td><td><code>prod-deploy1</code> through <code>prod-deploy6</code> give each region its own workspace.</td><td>Crude compared with a modern matrix pipeline.</td></tr>
+          <tr><td>Greppability</td><td><code>ls eum-prod-*</code> explains the operational surface fast.</td><td>Looks noisier than the real complexity.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section-card" id="implementation-map" data-title="implementation map file map scripts deploy scale drain backup update eks kill kpl">
+      <h2 class="section-title">Implementation Map Cheat Sheet</h2>
+      <p class="section-kicker">Most wrapper directories delegate to a small set of real implementations. This is the map to memorize for interviews and debugging.</p>
+      <table>
+        <thead><tr><th>Implementation</th><th>What it owns</th><th>Why it matters</th></tr></thead>
+        <tbody>
+          <tr><td><code>docker/helm/eum/deploy.sh</code></td><td>Helm install/upgrade, values cascade, schema special case, rollout wait</td><td>Central path for all service deploys and many restart-like operations.</td></tr>
+          <tr><td><code>docker/scripts/scale_tier.sh</code></td><td>Manual pod scaling</td><td>Operator override for predictable spikes or incident response.</td></tr>
+          <tr><td><code>docker/scripts/rolling_restart.sh</code></td><td>Restart pods without changing image</td><td>Useful for config/runtime refreshes outside a full deploy.</td></tr>
+          <tr><td><code>docker/scripts/drain_node_v2.sh</code></td><td>Idempotent detach, cordon, drain, terminate</td><td>Safe node replacement with tags/labels to resume after failure.</td></tr>
+          <tr><td><code>docker/scripts/update_eks.sh</code></td><td>EKS control-plane and add-on upgrade</td><td>Encodes version skew checks and controlled upgrade sequence.</td></tr>
+          <tr><td><code>docker/scripts/batch_instances.py</code></td><td>AZ round-robin batching</td><td>Prevents draining an entire AZ before others.</td></tr>
+          <tr><td><code>docker/scripts/getZonePerService_v2.py</code></td><td>Placement inspection</td><td>Shows actual pod distribution by service and zone.</td></tr>
+          <tr><td><code>eum-deploy/create_autoscale_group.py</code></td><td>ASG provisioning/update</td><td>Turns region/tier JSON into AWS capacity.</td></tr>
+          <tr><td><code>eum-deploy/backup_dynamo.py</code></td><td>DynamoDB backup and retention cleanup</td><td>Safety net before schema or metadata changes.</td></tr>
+          <tr><td><code>eum-deploy/eum-kill-kpl.py</code></td><td>KPL native process recovery</td><td>Emergency fix for hung Kinesis Producer Library workers.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section-card" id="helm" data-title="helm deployment mechanics values cascade reset values secrets">
+      <h2 class="section-title">Helm Deployment Mechanics</h2>
+      <p class="section-kicker">One deploy script serves all services. Its job is to validate inputs, switch context, assemble values, pin the image, run Helm, and wait for rollout.</p>
+
+      <div class="grid cols-2">
+        <div>
+          <h3>Values cascade</h3>
+          <div class="values-stack">
+            <div class="layer"><b>1. Environment</b><code>environment.yaml</code><span>global defaults</span></div>
+            <div class="layer"><b>2. Tier</b><code>role.collector.yaml</code><span>HPA, probes, limits</span></div>
+            <div class="layer"><b>3. Region</b><code>role.collector-us-west-2.yaml</code><span>regional overrides</span></div>
+            <div class="layer"><b>4. Secrets</b><code>secrets.prod.yaml</code><span class="wins">last wins</span></div>
+            <div class="layer"><b>5. Image</b><code>--set image.tag=master-1234</code><span>explicit pin</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>The command shape</h3>
+          <pre><button class="copy">Copy</button><code>helm secrets upgrade -i \
+  -f configs/prod/environment.yaml \
+  -f configs/prod/role.aggregator.yaml \
+  -f configs/prod/role.aggregator-us-west-2.yaml \
+  -f configs/prod/secrets.prod.yaml \
+  --set image.tag=master-1234 \
+  --reset-values \
+  eum-aggregator ./charts/aggregator</code></pre>
+          <p><strong><code>--reset-values</code> matters:</strong> every release starts from the files and explicit flags. Old ad-hoc <code>--set</code> values cannot silently survive.</p>
+        </div>
+      </div>
+
+      <div class="grid cols-3">
+        <div class="card"><h3>Umbrella chart</h3><p><code>docker/helm/eum</code> owns the parent chart and service subcharts. Roughly 50 service charts share one common template library.</p></div>
+        <div class="card"><h3>Common templates</h3><p>Deployment, HPA, PDB, Service, ConfigMap, ServiceAccount, probes, lifecycle hooks, and annotations are centralized.</p></div>
+        <div class="card"><h3>Checksum rollout</h3><p>ConfigMap/Secret checksums become pod annotations. A config change mutates the pod template, creating a new ReplicaSet automatically.</p></div>
+      </div>
+
+      <div class="macro success">
+        <strong>Schema chart exception:</strong> migration jobs are run-to-completion resources, so the release is deleted and recreated before rerun. Long-running services can upgrade in place; one-shot jobs often should not.
+      </div>
+    </section>
+
+    <section class="section-card" id="multi-region" data-title="multi region configuration prod json kube context asg">
+      <h2 class="section-title">Multi-Region Configuration</h2>
+      <p class="section-kicker">Region awareness is stored as configuration, not scattered through deployment code. The scripts stay region-agnostic; the JSON and values files carry the region facts.</p>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>What region config contains</h3>
+          <ul>
+            <li>Primary region and region list.</li>
+            <li>Subnets mapped to AZs.</li>
+            <li>AMI IDs per region.</li>
+            <li>Security groups and utility client groups.</li>
+            <li>Per-tier ASG desired, min, max, cooldown, health grace period, and instance types.</li>
+            <li>Drain timing such as <code>drain_sec</code>.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Region switch flow</h3>
+          <pre><button class="copy">Copy</button><code>export ENV=prod
+export REGION=eu-west-1
+export TIER=collector
+
+kubectl config use-context eu-west-1
+cd ../docker/helm/eum
+./deploy.sh</code></pre>
+          <p>The entire targeting mechanism is environment variables plus the active kubeconfig context.</p>
+        </div>
+      </div>
+      <div class="macro">
+        <strong>Why prod-deploy1 through prod-deploy6?</strong> Parallel CI jobs get separate workspaces, independent audit histories, and independent failures. One slow or failed region does not serialize the world.
+      </div>
+      <div class="grid cols-3">
+        <div class="card"><h3>Two indexing axes</h3><p>The config model is indexed by region and tier. Region answers where to run; tier answers what kind of nodes and limits a service needs.</p></div>
+        <div class="card"><h3>SSL endpoint maps</h3><p>Environment and region mapping also captures public endpoint differences so jobs do not bake endpoint logic into scripts.</p></div>
+        <div class="card"><h3>Config over code</h3><p>Adding or changing region capacity should usually mean editing JSON/YAML values, not branching Python or Bash logic.</p></div>
+      </div>
+    </section>
+
+    <section class="section-card" id="scaling" data-title="scaling hpa cluster autoscaler asg manual override">
+      <h2 class="section-title">Scaling Architecture</h2>
+      <p class="section-kicker">EUM scales in layers: pods first, nodes second, operators for predictable events.</p>
+      <div class="diagram">
+        <h3>Three-layer scale response</h3>
+        <div class="diagram-row">
+          <div class="box blue"><strong>Layer 1: HPA</strong><span>Runs every few seconds. CPU target around 50 percent gives JVM services headroom before saturation.</span></div>
+          <div class="box teal"><strong>Layer 2: Cluster Autoscaler</strong><span>Watches Pending pods, simulates whether a new node helps, then adjusts ASG desired count.</span></div>
+          <div class="box green"><strong>Layer 3: ASG</strong><span>Launches EC2 nodes, waits for kubelet join, and uses lifecycle hooks for graceful termination.</span></div>
+          <div class="box amber"><strong>Manual override</strong><span>Used for known events, Black Friday style spikes, or incident response when humans have better context.</span></div>
+        </div>
+      </div>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>HPA math</h3>
+          <pre><button class="copy">Copy</button><code>desired = ceil(currentReplicas * currentCPU / targetCPU)
+
+currentReplicas = 3
+currentCPU = 80
+targetCPU = 50
+
+desired = ceil(3 * 80 / 50) = 5</code></pre>
+        </div>
+        <div class="card">
+          <h3>Why 50 percent target?</h3>
+          <p>JVM warmup and readiness delay mean new capacity is not instant. Scaling at 50 percent leaves room for two minutes of pod startup and JIT/GC stabilization.</p>
+          <p>ASG cooldowns around 780 seconds prevent overreacting to short spikes after nodes are launched.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card" id="rolling" data-title="rolling deploy zero downtime pdb prestop minready">
+      <h2 class="section-title">Zero-Downtime Rolling Deploys</h2>
+      <p class="section-kicker">The safe deploy story is a composition of Kubernetes strategy, probes, minReadySeconds, PDBs, and service-specific shutdown hooks.</p>
+      <div class="swimlane" aria-label="rolling deploy timeline">
+        <div class="head">Moment</div><div class="head">Desired state</div><div class="head">Surge</div><div class="head">Readiness</div><div class="head">Termination</div><div class="head">Capacity</div>
+        <div>Start</div><div><span class="pod v1">v1</span><span class="pod v1">v1</span><span class="pod v1">v1</span></div><div>none</div><div>all ready</div><div>none</div><div>3/3</div>
+        <div>New pod</div><div><span class="pod v1">v1</span><span class="pod v1">v1</span><span class="pod v1">v1</span><span class="pod pending">v2</span></div><div><code>maxSurge=1</code></div><div>starting</div><div>none</div><div>3/3 serving</div>
+        <div>Stabilize</div><div><span class="pod v1">v1</span><span class="pod v1">v1</span><span class="pod v1">v1</span><span class="pod v2">v2</span></div><div>still +1</div><div><code>minReadySeconds=120</code></div><div>none</div><div>4 ready</div>
+        <div>Replace</div><div><span class="pod v1">v1</span><span class="pod v1">v1</span><span class="pod v2">v2</span></div><div>back to desired</div><div>stable</div><div><code>preStop</code> drains</div><div>3/3</div>
+      </div>
+
+      <div class="grid cols-3">
+        <div class="card"><h3><code>maxUnavailable=0</code></h3><p>Kubernetes cannot drop below desired available pods before a replacement pod is ready.</p></div>
+        <div class="card"><h3><code>minReadySeconds=120</code></h3><p>A pod must remain continuously ready long enough to pass JVM warmup and early GC instability.</p></div>
+        <div class="card"><h3><code>preStop</code> hook</h3><p>Service-specific shutdown scripts stop accepting work and flush in-flight batches before SIGTERM.</p></div>
+      </div>
+      <div class="card">
+        <h3>Custom rolling restart script</h3>
+        <p><code>rolling_restart.sh</code> exists for restart-only operations where the image does not change. The safe pattern is to select pods for a tier, delete or restart one disruption window at a time, wait for replacements to become Ready, and let PDBs block unsafe evictions. It is the same availability principle as a deploy, but without producing a new Helm revision.</p>
+      </div>
+      <div class="macro success">
+        <strong>PDB closes the gap:</strong> drains and other voluntary disruptions are blocked if eviction would violate minimum availability. RollingUpdate protects deployment; PDB protects operations.
+      </div>
+    </section>
+
+    <section class="section-card" id="node-lifecycle" data-title="node lifecycle drain cordon recycle idempotent">
+      <h2 class="section-title">Node Lifecycle: Drain, Cordon, Recycle</h2>
+      <p class="section-kicker">Node operations are idempotent because CI runners can die, AWS APIs can partially succeed, and humans need safe reruns at 3am.</p>
+      <div class="diagram">
+        <h3>Idempotent drain state machine</h3>
+        <div class="diagram-row five">
+          <div class="box blue"><strong>1. Check tags</strong><span>If EC2 tag <code>processStatus=Detached</code> exists, skip detach.</span></div>
+          <div class="box teal"><strong>2. Detach ASG</strong><span>Remove instance from ASG. Replacement node starts before old pods are evicted.</span></div>
+          <div class="box green"><strong>3. Cordon</strong><span>Mark node unschedulable and label it <code>processStatus=Cordoned</code>.</span></div>
+          <div class="box amber"><strong>4. Drain</strong><span>Evict non-daemonset pods, respecting PDBs and allowing ephemeral local data deletion.</span></div>
+          <div class="box violet"><strong>5. Terminate</strong><span>Terminate EC2 and delete the Kubernetes node object after it is empty.</span></div>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Command</th><th>Meaning</th><th>When to use</th></tr></thead>
+        <tbody>
+          <tr><td><code>kubectl cordon</code></td><td>Stops new pods from landing on a node. Existing pods keep running.</td><td>Suspect a node, prepare for maintenance, or pause scheduling.</td></tr>
+          <tr><td><code>kubectl drain</code></td><td>Cordons then evicts pods, waiting for PDB-safe replacement.</td><td>Node replacement, AMI rotation, K8s upgrade, ASG lifecycle termination.</td></tr>
+          <tr><td>ASG detach</td><td>Separates old instance from capacity accounting so replacement capacity can join first.</td><td>Before draining to avoid capacity cliff.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section-card" id="eks-upgrades" data-title="eks control plane upgrades kube proxy coredns vpc cni node rotation">
+      <h2 class="section-title">EKS Control-Plane Upgrades</h2>
+      <p class="section-kicker">The playbook separates control plane, core add-ons, network add-ons, and node rotation so each phase has a small blast radius.</p>
+      <div class="timeline">
+        <div class="time-step"><b>1</b><div class="body"><strong>Validate skew.</strong> Upgrade only one minor version at a time. Node kubelet versions must remain within supported skew.</div></div>
+        <div class="time-step"><b>2</b><div class="body"><strong>Upgrade control plane.</strong> <code>aws eks update-cluster-version</code>, then poll until successful. Nodes are still old, which is allowed temporarily.</div></div>
+        <div class="time-step"><b>3</b><div class="body"><strong>Patch kube-proxy and CoreDNS.</strong> Roll DaemonSet/Deployment images to versions compatible with the target Kubernetes version.</div></div>
+        <div class="time-step"><b>4</b><div class="body"><strong>Apply VPC CNI.</strong> Use <code>WARM_IP_TARGET=2</code> for faster pod startup and remove conflicting <code>WARM_ENI_TARGET</code>.</div></div>
+        <div class="time-step"><b>5</b><div class="body"><strong>Rotate nodes separately.</strong> Update ASG launch configuration or AMI, then drain old nodes in AZ-aware batches.</div></div>
+      </div>
+      <div class="macro">
+        <strong>Why decouple node rotation?</strong> Control-plane changes can complete while workload capacity remains steady. Node replacement can then be done gradually, one balanced batch at a time.
+      </div>
+    </section>
+
+    <section class="section-card" id="az-aware" data-title="az aware scheduling anti affinity topology spread drain batching">
+      <h2 class="section-title">AZ-Aware Scheduling and Drain Batching</h2>
+      <p class="section-kicker">EUM aims to spread replicas across AZs, but prefers serving traffic over perfect balance when capacity is tight.</p>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>Soft anti-affinity</h3>
+          <p><code>preferredDuringSchedulingIgnoredDuringExecution</code> tells the scheduler to spread pods across zones when possible. If one AZ is full, pods can still schedule elsewhere.</p>
+          <p>For stateless compute, soft spread avoids self-inflicted outages from overly strict placement rules.</p>
+        </div>
+        <div class="card">
+          <h3>Modern alternative</h3>
+          <p><code>topologySpreadConstraints</code> can express max skew directly. A modern implementation could use <code>ScheduleAnyway</code> for soft behavior or <code>DoNotSchedule</code> for hard behavior.</p>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Placement inspection</h3>
+        <p><code>getZonePerService_v2.py</code> is the audit tool for the scheduler's actual result. It answers the operational question that YAML alone cannot: are pods really distributed across AZs right now, or did capacity pressure force an imbalance?</p>
+      </div>
+      <div class="diagram">
+        <h3>Round-robin node batches</h3>
+        <div class="diagram-row">
+          <div class="box"><strong>Raw ASG order</strong><span>AZ-a: a1 a2 a3<br>AZ-b: b1 b2 b3<br>AZ-c: c1 c2 c3</span></div>
+          <div class="box green"><strong>Batch 1</strong><span>a1, b1, c1: one node per AZ.</span></div>
+          <div class="box green"><strong>Batch 2</strong><span>a2, b2, c2: capacity remains balanced.</span></div>
+          <div class="box green"><strong>Batch 3</strong><span>a3, b3, c3: no AZ is emptied first.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card" id="istio" data-title="istio mtls permissive service mesh sidecar">
+      <h2 class="section-title">Istio Service Mesh</h2>
+      <p class="section-kicker">In this architecture, Istio is used primarily for transparent service-to-service mTLS, not as the main deployment or ingress control plane.</p>
+      <div class="grid cols-3">
+        <div class="card"><h3>What it adds</h3><p>Envoy sidecars intercept traffic, present SPIFFE/X.509 identity, encrypt east-west traffic, and authenticate peers without application code changes.</p></div>
+        <div class="card"><h3>Why permissive mode</h3><p>Permissive mode accepts both mTLS and plaintext, allowing incremental migration across roughly 60 services.</p></div>
+        <div class="card"><h3>What is not used</h3><p>No heavy reliance on VirtualService canaries, mesh ingress, rate limiting, or circuit breaking. ALBs and RollingUpdate remain the main operational path.</p></div>
+      </div>
+      <div class="macro warning">
+        <strong>Maturity point:</strong> the strongest interview answer is not "use every Istio feature." It is "use the feature we can operate safely, prove coverage, then tighten to STRICT when ready."
+      </div>
+    </section>
+
+    <section class="section-card" id="schema" data-title="schema migrations two phase dynamodb backups">
+      <h2 class="section-title">Schema Migrations and Data Safety</h2>
+      <p class="section-kicker">Schema and metadata changes are treated as stateful operations with backups and phased compatibility.</p>
+      <div class="diagram">
+        <h3>Two-phase schema pattern</h3>
+        <div class="diagram-row">
+          <div class="box blue"><strong>Backup first</strong><span>Snapshot DynamoDB tables before risky deploys and garbage collect old backups after retention.</span></div>
+          <div class="box teal"><strong>Before-code migration</strong><span>Add new columns/indexes/attributes while keeping old readers and writers valid.</span></div>
+          <div class="box green"><strong>Deploy app code</strong><span>RollingUpdate may run old and new pods at the same time, so both schema shapes must work.</span></div>
+          <div class="box amber"><strong>After-code cleanup</strong><span>Drop unused fields or old paths only after no running code depends on them.</span></div>
+        </div>
+      </div>
+      <p>The reason is rollback reality: code rollback is cheap; destructive schema rollback is not. Compatibility windows let mixed-version pods coexist during rollout.</p>
+    </section>
+
+    <section class="section-card" id="secrets" data-title="secrets sops helm secrets kms">
+      <h2 class="section-title">Secrets Management</h2>
+      <p class="section-kicker">Secrets are encrypted in git and decrypted only for deployment through SOPS and helm-secrets.</p>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>Why SOPS + helm-secrets</h3>
+          <ul>
+            <li>Git contains ciphertext, not plaintext credentials.</li>
+            <li>AWS KMS controls who can decrypt.</li>
+            <li>Helm receives decrypted values during upgrade.</li>
+            <li>Kubernetes stores rendered Secret objects in etcd, relying on cluster encryption at rest.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Why secrets file is last</h3>
+          <p>Helm values are last-wins. If <code>secrets.prod.yaml</code> is last, lower-priority role or region files cannot accidentally override production credentials with defaults.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card" id="cicd" data-title="ci cd teamcity make versioning calendar">
+      <h2 class="section-title">CI/CD and Versioning</h2>
+      <p class="section-kicker">TeamCity answers when and in what order; Make answers how each build/package/publish operation works.</p>
+      <div class="grid cols-3">
+        <div class="card"><h3>TeamCity DSL</h3><p>Kotlin build definitions hold VCS triggers, build steps, branch filters, and orchestration sequencing.</p></div>
+        <div class="card"><h3>Make targets</h3><p>Helm linting, Docker/ECR login, chart packaging, chart publish, and build number creation are local-runnable targets.</p></div>
+        <div class="card"><h3>Calendar versions</h3><p>Versions such as <code>26.5.1234</code> communicate build time without debating semantic major/minor meaning for high-frequency chart releases.</p></div>
+      </div>
+      <div class="macro success">
+        <strong>Migration value:</strong> if TeamCity is replaced later, the Makefile behavior can stay. CI should invoke delivery logic, not become delivery logic.
+      </div>
+    </section>
+
+    <section class="section-card" id="disaster" data-title="disaster toolbox runbooks kpl delete pod recycler backup">
+      <h2 class="section-title">Disaster Toolbox</h2>
+      <p class="section-kicker">The operational philosophy is simple: operators run named jobs, not remembered shell commands.</p>
+      <div class="grid cols-3">
+        <div class="card"><h3>KPL hang recovery</h3><p>Kinesis Producer Library native process can deadlock. The runbook kills the native binary and relies on the Java supervisor to respawn a healthy producer.</p></div>
+        <div class="card"><h3>Delete pod</h3><p>Emergency pod deletion forces Deployment to create a replacement while PDBs prevent reducing the service below safe capacity.</p></div>
+        <div class="card"><h3>k8s-recycler</h3><p>Validates cluster health, respects PDBs globally, and rotates nodes with bounded disruption instead of a blind per-node loop.</p></div>
+      </div>
+      <table>
+        <thead><tr><th>Incident</th><th>Job / script</th><th>Why coded</th></tr></thead>
+        <tbody>
+          <tr><td>Bad node</td><td><code>drain_node_v2.sh</code></td><td>Re-runnable tags and labels prevent double work.</td></tr>
+          <tr><td>Traffic surge</td><td><code>scale_tier.sh</code></td><td>Operator override is auditable and parameterized by tier/region.</td></tr>
+          <tr><td>Metadata risk</td><td><code>backup_dynamo.py</code></td><td>Creates point-in-time safety before schema or table changes.</td></tr>
+          <tr><td>K8s version old</td><td><code>update_eks.sh</code></td><td>Encodes version skew validation and add-on patching.</td></tr>
+          <tr><td>Read-only triage</td><td><code>kube-status</code>, <code>node-status</code></td><td>Gives operators a CI-audited way to inspect health without SSHing into nodes.</td></tr>
+          <tr><td>Tenant operations</td><td><code>manage-account</code>, <code>local-admin</code></td><td>Keeps account/license actions behind named jobs and scoped parameters.</td></tr>
+          <tr><td>Pre-flight deploy review</td><td><code>deployment-plan</code>, <code>diff</code></td><td>Shows intended Helm/Kubernetes changes before mutating production.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section-card" id="azure-dfd" data-title="azure dfd kafka cosmos blob redis event sessionizer decorator">
+      <h2 class="section-title">Azure DFD and Cross-Cloud Mapping</h2>
+      <p class="section-kicker">The DFD shows the same core architecture expressed with Azure-ready equivalents and modern EUM pipeline services.</p>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>Event and session pipelines</h3>
+          <ul>
+            <li>Collector emits to SQS/Kinesis style streams for event symbolication, crash symbolication, JS error grouping, and sessionization.</li>
+            <li>Sessionizer reads Kinesis/Kafka, uses Redis cache, and publishes events to Elasticsearch/Event Service.</li>
+            <li>Decorator reads sessionizer output, correlates APM API IDs, and publishes correlated EUM/APM data.</li>
+            <li>Event and crash groupers store grouped snapshots in S3/Blob and group metadata in DynamoDB/Cosmos.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Cluster facts from DFD</h3>
+          <ul>
+            <li>Core services such as geomap, sessionizer, decorator, aggregator, collector, API, crash-grouper, event-symbolicator, and license-service show three pods each.</li>
+            <li>Collector uses soft anti-affinity; collector-proxy uses required affinity to collectors and preferred anti-affinity to itself.</li>
+            <li>Kafka topics map to Kinesis streams; Kafka topics can also represent SQS queue equivalents with retention and max message size.</li>
+          </ul>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>AWS concept</th><th>Azure-oriented equivalent</th><th>Operational note</th></tr></thead>
+        <tbody>
+          <tr><td>DynamoDB</td><td>Cosmos DB</td><td>PAY_PER_REQUEST maps to autoscale/lower RU; PROVISIONED maps to planned RU capacity.</td></tr>
+          <tr><td>S3 buckets</td><td>Blob Storage</td><td>Retention differs by object type: metrics/events often short, crash reports/source maps longer.</td></tr>
+          <tr><td>Kinesis streams</td><td>Kafka topics</td><td>Shards become partitions; retention remains an explicit design control.</td></tr>
+          <tr><td>SQS queues</td><td>Kafka queue-style topics</td><td>DLQs/retry queues preserve failure isolation and replay windows.</td></tr>
+          <tr><td>ElastiCache Redis</td><td>Redis cache</td><td>Used for L1 metrics, session cache, token/cache workloads, and event group caches.</td></tr>
+        </tbody>
+      </table>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>DFD EKS service inventory</h3>
+          <p>The PDF lists three pods for a large set of services: <code>geomap</code>, <code>ultron-service</code>, <code>sessionizer</code>, <code>decorator</code>, <code>error-service</code>, <code>account-service</code>, <code>monitor</code>, <code>aggregator</code>, <code>screenshot service</code>, <code>collector</code>, <code>event-grouper</code>, <code>telemetry</code>, <code>api</code>, <code>crash-grouper</code>, <code>user-journey-query-service</code>, <code>error-grouper</code>, <code>iot-collector</code>, <code>license-service</code>, <code>event-symbolicator</code>, and <code>crash-symbolicator</code>.</p>
+          <p>Collector uses preferred anti-affinity. Collector-proxy is scheduled near collectors through required affinity and spread away from other collector-proxy pods through preferred anti-affinity.</p>
+        </div>
+        <div class="card">
+          <h3>DFD storage and queue inventory</h3>
+          <p>Kafka/Kinesis streams include event and record streams with 24-hour retention. SQS-equivalent queues include mobile crash reports, crash symbolicator, mobile event grouper, event symbolicator, browser error grouper, resource snapshots, coexistence worker, retry, and DLQ style topics.</p>
+          <p>Blob/S3 stores cover aggregated metrics/events, collector metrics/events, event snapshots, resource snapshots, JS error data/source files/source maps/stack traces, mobile crash reports, screenshots, synthetic artifacts, synthetic measurements, and URL analysis.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card" id="interview" data-title="interview questions answers mastery">
+      <h2 class="section-title">Interview Master Q&A</h2>
+      <p class="section-kicker">These are the high-signal answers to practice until they feel natural.</p>
+
+      <details open>
+        <summary>Q1. Walk me through a production deploy end to end.</summary>
+        <div class="details-body">
+          Engineer merges to a release branch. TeamCity publishes the image and chart through Make targets. Operator triggers the right <code>eum-prod-deployN</code> job with region, tier, and build. The wrapper sets env vars and calls <code>deploy.sh</code>. The deploy script switches kube context, builds the values cascade, pins <code>image.tag</code>, runs <code>helm secrets upgrade -i --reset-values</code>, and waits for Kubernetes rollout. RollingUpdate uses <code>maxUnavailable=0</code>, <code>maxSurge=1</code>, readiness, <code>minReadySeconds=120</code>, PDBs, and preStop drains.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q2. How does EUM handle a sudden 5x traffic spike?</summary>
+        <div class="details-body">
+          CPU rises on collector pods. HPA computes desired replicas from current CPU versus the 50 percent target. If existing nodes have capacity, new pods schedule and warm up. If pods become Pending, Cluster Autoscaler increases ASG desired capacity. ASG launches nodes, kubelet joins them, and the scheduler places pods. When the spike ends, HPA scales down pods and Cluster Autoscaler later drains and removes underutilized nodes through lifecycle hooks.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q3. How do you upgrade Kubernetes without downtime?</summary>
+        <div class="details-body">
+          Validate one-minor-version upgrade rules. Upgrade the EKS control plane first. Patch kube-proxy, CoreDNS, and VPC CNI. Use <code>WARM_IP_TARGET</code> to keep pod IP assignment fast. Rotate nodes as a separate operation by updating ASG launch config or AMI, then draining old nodes in AZ-aware batches. PDBs and replacement-first drain keep services available.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q4. A pod is stuck in CrashLoopBackOff. What do you do?</summary>
+        <div class="details-body">
+          Start with <code>kubectl describe pod</code> for events, not deletion. Check <code>kubectl logs --previous</code> for the last crash. Distinguish OOMKilled, image pull failures, liveness probe failures, and application exit errors. Confirm resource limits and recent image tag. Use the delete-pod job only as mitigation; root cause is code or config followed by redeploy.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q5. How do you prevent a bad deploy from taking production down?</summary>
+        <div class="details-body">
+          Use helm diff/deployment-plan, DynamoDB backup before schema risk, RollingUpdate with zero unavailable capacity, readiness probes that stop bad pods from receiving traffic, minReadySeconds for stabilization, PDBs during voluntary disruptions, and Helm rollback or emergency <code>kubectl set image</code> if needed. The best safety mechanism is that old pods keep serving if new pods cannot prove readiness.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q6. Why keep all state external to EKS?</summary>
+        <div class="details-body">
+          Nodes and clusters become replaceable compute. Draining a node is safe because state is in Redis, DynamoDB/Cosmos, S3/Blob, Kinesis/Kafka, SQS, or Elasticsearch. Cluster replacement becomes deploy services and shift traffic; no PVC migration is required. The trade-off is stronger dependency on managed data services, which is acceptable because the operational simplicity is enormous.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q7. What would you improve?</summary>
+        <div class="details-body">
+          Move wrappers toward matrix CI or GitOps where access/audit needs allow it. Add typed config validation for region/tier settings. Consider topology spread constraints over older anti-affinity. Evaluate progressive delivery through Istio only after the team is ready to operate VirtualServices. Consider External Secrets Operator for runtime rotation, balanced against the simplicity of SOPS.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q8. How do you safely drain a node?</summary>
+        <div class="details-body">
+          Detach the instance from the ASG so replacement capacity starts first, tag the EC2 instance as detached, wait for new nodes, cordon the Kubernetes node, label it cordoned, drain with daemonsets ignored and PDBs respected, then terminate EC2 and delete the node object. The v2 script is idempotent because tags and labels allow a failed run to resume rather than duplicate work.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q9. How do you do schema migrations without downtime?</summary>
+        <div class="details-body">
+          Run a backup first. Then apply a backward-compatible before-code migration that adds new schema while old code still works. Deploy application pods with RollingUpdate while old and new versions coexist. Finally run after-code cleanup only when no running pod depends on the old schema. Schema charts are treated as Kubernetes Jobs, so the release is purged and recreated for a fresh run.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q10. Why one wrapper per environment and operation?</summary>
+        <div class="details-body">
+          It matches legacy Jenkins/TeamCity job discovery, gives each job independent audit history and access control, lets prod regions run in parallel with separate workspaces, and is easy to grep. The downside is directory count, but the wrappers are intentionally thin; the real implementation surface stays small.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q11. How are secrets managed?</summary>
+        <div class="details-body">
+          Secret values files are encrypted with SOPS and protected by KMS. <code>helm secrets</code> decrypts them during deploy and passes them to Helm. The secrets file is placed last in the values cascade so lower-priority environment, role, or region files cannot override production credentials.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q12. How do you debug pods not spreading across AZs?</summary>
+        <div class="details-body">
+          First confirm the chart affinity or topology configuration. Then inspect actual placement with <code>getZonePerService_v2.py</code> or equivalent <code>kubectl get pod -o wide</code> checks. If placement is imbalanced, check node capacity per AZ, taints, labels, pending pods, and whether soft anti-affinity was intentionally relaxed because one AZ lacked capacity.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q13. What does the disaster recovery toolbox include?</summary>
+        <div class="details-body">
+          KPL kill jobs for hung native producers, delete-pod for emergency replacement, drain-node for bad nodes, kube-status and node-status for read-only triage, manage-account and local-admin for tenant operations, deployment-plan and diff for pre-flight review, DynamoDB backups for metadata risk, and k8s-recycler for cluster-wide AMI or node rotation.
+        </div>
+      </details>
+
+      <details>
+        <summary>Q14. How do chart and image versions work?</summary>
+        <div class="details-body">
+          CI uses calendar-style chart versions like <code>26.5.1234</code> so operators can infer when an artifact was built. Images are pinned explicitly, often as branch plus build number, rather than relying on <code>latest</code>. Chart version and image version are decoupled: a chart can change without a new app image, and an app image can deploy through the same chart templates.
+        </div>
+      </details>
+    </section>
+
+    <section class="section-card" id="closing" data-title="closing narrative summary">
+      <h2 class="section-title">Closing Narrative</h2>
+      <p>
+        EUM at scale is the runtime architecture plus the operational discipline around it. Browser and mobile beacons flow into stateless collectors, one-minute L1 aggregation, aggregator ownership through DynamoDB conditional updates, L2 metric storage, and Controller downloads. Kanye keeps that machinery alive across regions by turning deployment and incident response into repeatable jobs: Helm for declarative service delivery, layered values to avoid drift, HPA plus ASG for elasticity, PDBs and preStop hooks for safe disruption, AZ-aware drains for node replacement, and coded runbooks for the ugly moments.
+      </p>
+      <div class="macro success">
+        <strong>One sentence to remember:</strong> state is external, nodes are cattle, deployments are declarative, and operators run jobs instead of improvising commands.
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const progress = document.getElementById('progress');
+const tocLinks = [...document.querySelectorAll('#toc a')];
+const sections = [...document.querySelectorAll('main section')];
+const search = document.getElementById('sectionSearch');
+
+window.addEventListener('scroll', () => {
+  const max = document.documentElement.scrollHeight - innerHeight;
+  progress.style.width = `${Math.max(0, Math.min(100, scrollY / max * 100))}%`;
+  let current = sections[0]?.id;
+  for (const section of sections) {
+    if (section.getBoundingClientRect().top < 110) current = section.id;
+  }
+  tocLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${current}`));
+}, { passive: true });
+
+search.addEventListener('input', () => {
+  const q = search.value.trim().toLowerCase();
+  sections.forEach(section => {
+    const haystack = `${section.dataset.title || ''} ${section.innerText}`.toLowerCase();
+    section.classList.toggle('hidden', q && !haystack.includes(q));
+  });
+  tocLinks.forEach(link => {
+    const target = document.querySelector(link.getAttribute('href'));
+    link.classList.toggle('hidden', target?.classList.contains('hidden'));
+  });
+});
+
+document.querySelectorAll('.copy').forEach(button => {
+  button.addEventListener('click', async () => {
+    const code = button.parentElement.querySelector('code')?.innerText || '';
+    try {
+      await navigator.clipboard.writeText(code);
+      button.textContent = 'Copied';
+      setTimeout(() => button.textContent = 'Copy', 1200);
+    } catch {
+      button.textContent = 'Select';
+    }
+  });
+});
+</script>
+</body>
+</html>
